@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useHousehold, writeLocalState } from '@/components/useHousehold';
 import { SAMPLE_PRODUCTS } from '@/lib/sample';
+import { ReceiptIcon, VerifiedIcon } from '@/components/Icons';
 import type { Product } from '@/lib/types';
 
 type Item = { name: string; quantity?: number | null; total_price?: number | null; product_id?: string | null };
@@ -12,7 +13,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const DEMO_RECEIPTS: { label: string; parsed: Parsed }[] = [
   {
-    label: '🧾 範例 1：momo 購物網（皇家 IN27 室內成貓）',
+    label: '範例 1：momo 購物網（皇家 IN27 室內成貓）',
     parsed: {
       date: '2026-11-01',
       channel: 'momo 購物網',
@@ -22,7 +23,7 @@ const DEMO_RECEIPTS: { label: string; parsed: Parsed }[] = [
     },
   },
   {
-    label: '🧾 範例 2：酷澎 Coupang（歐睿健鮮雞＋pidan 混合砂）',
+    label: '範例 2：酷澎 Coupang（歐睿健鮮雞＋pidan 混合砂）',
     parsed: {
       date: '2026-10-28',
       channel: '酷澎 Coupang',
@@ -33,7 +34,7 @@ const DEMO_RECEIPTS: { label: string; parsed: Parsed }[] = [
     },
   },
   {
-    label: '🧾 範例 3：好市多線上（藍鑽 25lb 雙重活性碳礦砂）',
+    label: '範例 3：好市多線上（藍鑽 25lb 雙重活性碳礦砂）',
     parsed: {
       date: '2026-10-30',
       channel: '好市多線上購物',
@@ -80,8 +81,8 @@ export default function Purchase() {
     return (
       <main>
         <section className="card">
-          <h1>🧾 上傳訂單證明</h1>
-          <p>請先到 <Link href="/me"><b>我的家</b></Link> 一鍵登入，即可體驗 AI 訂單截圖辨識並領取 +30 點！</p>
+          <h1>上傳訂單證明</h1>
+          <p>請先到 <Link href="/me"><b>我的貓窩</b></Link> 一鍵登入，即可體驗 AI 訂單截圖辨識並領取 +30 EXP。</p>
           <Link href="/me" className="btn-primary" style={{ alignSelf: 'flex-start' }}>前往登入 →</Link>
         </section>
       </main>
@@ -108,11 +109,11 @@ export default function Purchase() {
     setDone([]);
     pick(0, demo.parsed);
     setHint('');
-    setMsg(`✨ Gemini AI 已完成截圖辨識！自動過濾非寵物日用品，共擷取到 ${demo.parsed.items?.length ?? 0} 項寵物商品并自動對齊商品目錄。`);
+    setMsg(`Gemini AI 已完成截圖辨識，自動過濾非寵物日用品，共擷取到 ${demo.parsed.items?.length ?? 0} 項寵物商品並自動對齊商品目錄。`);
   }
 
   async function upload(file: File) {
-    setBusy(true); setMsg('🤖 Gemini 2.5 Flash 正在辨識訂單截圖…'); setHint(''); setParsed(null); setPicked(null); setDone([]); setProofPath(null);
+    setBusy(true); setMsg('Gemini 2.5 Flash 正在辨識訂單截圖…'); setHint(''); setParsed(null); setPicked(null); setDone([]); setProofPath(null);
 
     if (isLocalMode || !db || !session) {
       setTimeout(() => {
@@ -121,7 +122,7 @@ export default function Purchase() {
         setProofPath(`local-upload-${Date.now()}-${file.name}`);
         setParsed(demo);
         pick(0, demo);
-        setMsg(`✨ 已讀取「${file.name}」並完成模擬辨識！請確認下方帶入的品項與金額。`);
+        setMsg(`已讀取「${file.name}」並完成模擬辨識，請確認下方帶入的品項與金額。`);
       }, 600);
       return;
     }
@@ -132,7 +133,7 @@ export default function Purchase() {
     const res = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ path }) });
     const json = await res.json();
     setBusy(false);
-    if (!res.ok) return setMsg(`${json.error ?? '辨識失敗'}。這張圖不能當購買證明，你仍可以手動記錄（沒有點數）。`);
+    if (!res.ok) return setMsg(`${json.error ?? '辨識失敗'}。這張圖不能當購買證明，你仍可以手動記錄（沒有貢獻值）。`);
     const p = json as Parsed;
     setProofPath(path);
     setParsed(p);
@@ -192,9 +193,9 @@ export default function Purchase() {
 
       if (unlockCycle) {
         const gapDays = Math.abs(Math.round((new Date(form.purchased_at).getTime() - new Date(prevSame[0].purchased_at).getTime()) / 86_400_000));
-        setHint(`🎯 太棒了！系統偵測到你上次在 ${prevSame[0].purchased_at} 也買過同款，自動算出你家一包用 ${gapDays} 天，額外發放 +20 點週期獎勵！`);
+        setHint(`系統偵測到你上次在 ${prevSame[0].purchased_at} 也買過同款，自動算出你家一包用 ${gapDays} 天，額外發放 +20 EXP 週期獎勵。`);
       } else {
-        setHint('💡 小提示：這款目前累積 1 筆訂單，再上傳一張不同日期的同款訂單，就能自動算出「一包用幾天」並額外領 +20 點！');
+        setHint('提示：這款目前累積 1 筆訂單，再上傳一張不同日期的同款訂單，就能自動算出「一包用幾天」並額外領 +20 EXP。');
       }
 
       if (proofPath && parsed?.items && picked != null) {
@@ -203,10 +204,10 @@ export default function Purchase() {
         const next = parsed.items.findIndex((_, i) => !nextDone.includes(i));
         if (next >= 0) {
           pick(next);
-          return setMsg(`✓ 已記錄「${prodName}」，獲得 +30 點！訂單上還有 ${parsed.items.length - nextDone.length} 個品項可以確認。`);
+          return setMsg(`已記錄「${prodName}」，獲得 +30 EXP。訂單上還有 ${parsed.items.length - nextDone.length} 個品項可以確認。`);
         }
       }
-      setMsg(verified ? `🎉 已驗證並記錄「${prodName}」，獲得 +30 點${unlockCycle ? '（外加週期解鎖 +20 點，共 +50 點！）' : '！'}` : '已手動記錄（無證明不發點數，排行權重 0.4）。');
+      setMsg(verified ? `已驗證並記錄「${prodName}」，獲得 +30 EXP${unlockCycle ? '（外加週期解鎖 +20 EXP，共 +50 EXP）' : ''}。` : '已手動記錄（無證明不發 EXP，排行權重 0.25）。');
       setProofPath(null); setParsed(null); setPicked(null); setDone([]);
       return;
     }
@@ -224,15 +225,15 @@ export default function Purchase() {
     if (error) return setMsg(error);
 
     const { count } = await db.from('purchases').select('id', { count: 'exact', head: true }).eq('product_id', form.product_id);
-    if ((count ?? 0) < 2) setHint('再上傳一張「之前買同一款」的訂單，就能算出你家一包用幾天（兩張都有證明再 +20 點）。');
+    if ((count ?? 0) < 2) setHint('再上傳一張「之前買同一款」的訂單，就能算出你家一包用幾天（兩張都有證明再 +20 EXP）。');
 
     if (proofPath && parsed?.items && picked != null) {
       const nextDone = [...done, picked];
       setDone(nextDone);
       const next = parsed.items.findIndex((_, i) => !nextDone.includes(i));
-      if (next >= 0) { pick(next); return setMsg(`已記錄，獲得 30 點。還有 ${parsed.items.length - nextDone.length} 個品項可以記。`); }
+      if (next >= 0) { pick(next); return setMsg(`已記錄，獲得 30 EXP。還有 ${parsed.items.length - nextDone.length} 個品項可以記。`); }
     }
-    setMsg(proofPath ? '已記錄，獲得 30 點。' : '已記錄。手動回報沒有點數，在排行中的權重也較低。');
+    setMsg(proofPath ? '已記錄，獲得 30 EXP。' : '已記錄。手動回報沒有 EXP，在排行中的權重也較低。');
     setProofPath(null); setParsed(null); setPicked(null); setDone([]);
   }
 
@@ -244,19 +245,19 @@ export default function Purchase() {
       <section className="hero-compact card">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <div>
-            <h1>🧾 上傳訂單截圖・Gemini AI 自動辨識</h1>
+            <h1 className="row" style={{ gap: 8 }}><ReceiptIcon size={22} /> 上傳訂單截圖 · Gemini AI 自動辨識</h1>
             <p className="muted" style={{ margin: 0 }}>
-              上傳 momo、蝦皮、酷澎或寵物店發票截圖，系統只擷取「貓砂／貓飼料」，其他個人日用品自動忽略不存。同一款累積兩次購買即可自動算出真實使用天數！
+              上傳 momo、蝦皮、酷澎或寵物店發票截圖，系統只擷取「貓砂／貓飼料」，其他個人日用品自動忽略不存。同一款累積兩次購買即可自動算出真實使用天數。
             </p>
           </div>
-          <span className="points-badge" style={{ fontSize: '1rem', padding: '6px 14px' }}>
-            驗證獎勵 +30 點（湊滿兩筆再 +20 點）
+          <span className="points-badge" style={{ fontSize: '0.85rem', padding: '6px 12px' }}>
+            驗證獎勵 +30 EXP（湊滿兩筆再 +20 EXP）
           </span>
         </div>
       </section>
 
       <section className="card form">
-        <h3>⚡ 快速測試：一鍵載入真實電商訂單截圖（模擬 Gemini OCR 辨識）</h3>
+        <h3>快速測試：一鍵載入真實電商訂單截圖（模擬 Gemini OCR 辨識）</h3>
         <p className="small muted" style={{ margin: 0 }}>
           手邊沒截圖？直接點下方任一按鈕，體驗 AI 自動從雜亂的賣場標題對齊標準商品 ID 與金額：
         </p>
@@ -269,7 +270,7 @@ export default function Purchase() {
         </div>
 
         <label htmlFor="proof" className="upload-dropzone">
-          <b>📤 或從電腦選擇你的訂單截圖／發票照片上傳</b>
+          <b>或從電腦選擇你的訂單截圖／發票照片上傳</b>
           <span className="small muted">支援 JPG / PNG 截圖，私人加密 Bucket 儲存</span>
           <input id="proof" type="file" accept="image/*" disabled={busy} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
@@ -277,8 +278,8 @@ export default function Purchase() {
         {parsed?.items && parsed.items.length > 0 && (
           <div className="ocr-result-box">
             <div className="row" style={{ justifyContent: 'space-between' }}>
-              <b>🤖 Gemini 2.5 Flash 辨識結果（通路：{parsed.channel ?? '未標示'}｜日期：{parsed.date ?? '未標示'}）</b>
-              <span className="tag">✓ 已通過寵物商品驗證</span>
+              <b>Gemini 2.5 Flash 辨識結果（通路：{parsed.channel ?? '未標示'} ｜ 日期：{parsed.date ?? '未標示'}）</b>
+              <span className="tag row" style={{ gap: 4 }}><VerifiedIcon size={12} /> 已通過寵物商品驗證</span>
             </div>
             {parsed.items.map((it, i) => {
               const p = nameOf(it.product_id);
@@ -286,12 +287,12 @@ export default function Purchase() {
                 <div key={i} className="ocr-item-row">
                   <div style={{ flex: 1 }}>
                     <div>原始賣場品名：<b>{it.name}</b> ×{it.quantity ?? 1}（NT${it.total_price ?? '?'}）</div>
-                    <div className="small" style={{ color: p ? 'var(--accent)' : 'var(--muted)' }}>
-                      {p ? `🎯 AI 自動對齊目錄：${p.brand} — ${p.name}` : '⚠️ 目錄裡沒有完全對應，請在下方手動選擇商品'}
+                    <div className="small muted">
+                      {p ? `AI 自動對齊目錄：${p.brand} — ${p.name}` : '目錄裡沒有完全對應，請在下方手動選擇商品'}
                     </div>
                   </div>
                   {done.includes(i) ? (
-                    <span className="tag">✓ 已入帳</span>
+                    <span className="tag">已入帳</span>
                   ) : (
                     <button type="button" className="ghost small-btn" disabled={picked === i} onClick={() => pick(i)}>
                       {picked === i ? '目前編輯中' : '帶入這筆'}
@@ -303,15 +304,15 @@ export default function Purchase() {
           </div>
         )}
 
-        <h3>📋 確認購買紀錄明細</h3>
+        <h3>確認購買紀錄明細</h3>
         <label htmlFor="pid">
           對應商品
           <select id="pid" value={form.product_id} onChange={(e) => set('product_id', e.target.value)}>
             <option value="">選擇商品</option>
-            <optgroup label="🍖 熱門貓飼料">
+            <optgroup label="熱門貓飼料">
               {products.filter((p) => p.category === 'food').map((p) => <option key={p.id} value={p.id}>{p.brand}｜{p.name}</option>)}
             </optgroup>
-            <optgroup label="🪣 熱門貓砂">
+            <optgroup label="熱門貓砂">
               {products.filter((p) => p.category === 'litter').map((p) => <option key={p.id} value={p.id}>{p.brand}｜{p.name}</option>)}
             </optgroup>
           </select>
@@ -330,16 +331,16 @@ export default function Purchase() {
         </label>
 
         <button onClick={save} disabled={busy || !form.product_id}>
-          {proofPath ? '✅ 確認無誤，寫入驗證紀錄並領取 +30 點' : '📝 無截圖手動記錄（無點數，權重 0.4）'}
+          {proofPath ? '確認無誤，寫入驗證紀錄並領取 +30 EXP' : '無截圖手動記錄（無 EXP，權重 0.25）'}
         </button>
 
         {msg && <p className="notice">{msg}</p>}
-        {hint && <p className="notice" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>{hint}</p>}
+        {hint && <p className="notice">{hint}</p>}
       </section>
 
       {local.purchases.length > 0 && (
         <section className="card">
-          <h3>📦 我已登錄的購買紀錄（{local.purchases.length} 筆）</h3>
+          <h3>我已登錄的購買紀錄（{local.purchases.length} 筆）</h3>
           <table>
             <thead>
               <tr>
@@ -359,7 +360,7 @@ export default function Purchase() {
                     <td><b>{p ? `${p.brand} ${p.name}` : pu.product_id}</b></td>
                     <td>{pu.channel}</td>
                     <td className="num">{pu.quantity} 包 · NT${pu.price_twd ?? '—'}</td>
-                    <td>{pu.verified ? <span className="tag">✓ 已驗證 (+30點)</span> : <span className="tag plain">手動紀錄</span>}</td>
+                    <td>{pu.verified ? <span className="tag">已驗證 (+30 EXP)</span> : <span className="tag plain">手動紀錄</span>}</td>
                   </tr>
                 );
               })}

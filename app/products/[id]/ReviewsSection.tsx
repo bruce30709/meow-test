@@ -1,79 +1,90 @@
 'use client';
 import Link from 'next/link';
+import { HOUSING_LABEL, type Review } from '@/lib/types';
 import { useHousehold } from '@/components/useHousehold';
 import { ReviewPhotoCard } from '@/components/ProductVisual';
-import { HOUSING_LABEL, type Review } from '@/lib/types';
+import { VerifiedIcon, PlusCircleIcon, InfoCircleIcon } from '@/components/Icons';
 
 export default function ReviewsSection({ productId, initial }: { productId: string; initial: Review[] }) {
-  const { local } = useHousehold();
-  const localForProduct = local.reviews.filter((r) => r.product_id === productId);
-  const allReviews = [...localForProduct, ...initial];
+  const { local, isLocalMode } = useHousehold();
+  const userReviews = isLocalMode ? local.reviews.filter((r) => r.product_id === productId) : [];
+  const allReviews = [...userReviews, ...initial];
+
+  const allPhotos = allReviews.flatMap((r) => r.photos ?? []);
 
   return (
-    <section className="section-block">
-      <div className="section-head">
-        <div>
-          <h2>💬 飼主真實實測與 Dcard／社群口碑彙整（{allReviews.length} 則）</h2>
-          <p className="small muted">包含完成居家標準盲測、附帶訂單驗證與第 30 天長期追蹤的真實回饋。</p>
-        </div>
-        <Link href={`/submit?product=${productId}`} className="btn-link">
-          ✍️ 我也要寫這款實測 (+80點)
-        </Link>
-      </div>
-
-      {allReviews.length === 0 && (
-        <p className="muted">這款商品還沒有評論，成為第一個完成標準實測的貓奴即可獲得 +80 點！</p>
+    <>
+      {allPhotos.length > 0 && (
+        <section className="section-block">
+          <h2>標準化實測對照圖（粉塵・結團・顆粒比例尺）</h2>
+          <div className="rev-photos-row">
+            {allPhotos.map((ph, i) => (
+              <ReviewPhotoCard key={i} photo={ph} />
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="review-list">
-        {allReviews.map((v) => (
-          <article key={v.id} className="review-card card">
-            <div className="review-top">
-              <div className="reviewer-avatar">{(v.display_name ?? '匿').slice(0, 1)}</div>
-              <div className="reviewer-info">
-                <div className="row" style={{ gap: 6 }}>
-                  <b>{v.display_name ?? '匿名貓奴'}</b>
-                  <span className="tag plain">
-                    {v.cats} 隻貓{v.housing ? `・${HOUSING_LABEL[v.housing]}` : ''}
-                  </span>
-                  {v.verified && <span className="tag">✓ 購買驗證</span>}
-                  {v.sponsored && <span className="tag amber">品牌試用包體驗</span>}
-                  {v.day === 30 && <span className="tag">📅 滿 30 天長期追蹤</span>}
+      <section className="section-block">
+        <div className="section-head">
+          <h2>飼主實測評論與社群真實回饋（{allReviews.length} 則）</h2>
+          <Link href={`/submit?product=${productId}`} className="btn-link">＋ 撰寫此款實測</Link>
+        </div>
+
+        <div className="review-list">
+          {allReviews.map((rv) => (
+            <div className="review-card card" key={rv.id}>
+              <div className="review-top">
+                <div className="reviewer-avatar">{rv.display_name.slice(0, 1)}</div>
+                <div>
+                  <div className="row" style={{ gap: 6 }}>
+                    <b>{rv.display_name}</b>
+                    <span className="tag plain">{rv.cats} 隻貓 · {HOUSING_LABEL[rv.housing] ?? rv.housing}</span>
+                    {rv.verified_purchase && (
+                      <span className="tag row" style={{ gap: 4 }}>
+                        <VerifiedIcon size={12} /> 已驗證購買
+                      </span>
+                    )}
+                    {rv.is_sample && <span className="tag amber">試用包揭露</span>}
+                    {rv.source_tag && <span className="tag plain">{rv.source_tag}</span>}
+                  </div>
+                  <div className="small muted">{String(rv.created_at).slice(0, 10)}</div>
                 </div>
-                {v.source_tag && <div className="small muted">來源憑證：{v.source_tag}</div>}
               </div>
-              <span className="small muted" style={{ marginLeft: 'auto' }}>{v.created_at}</span>
+
+              {(rv.pros || rv.cons) && (
+                <div className="pros-cons-grid">
+                  {rv.pros && (
+                    <div className="pros-box">
+                      <b className="row" style={{ gap: 5 }}><PlusCircleIcon size={14} /> 實測優點</b>
+                      <span>{rv.pros}</span>
+                    </div>
+                  )}
+                  {rv.cons && (
+                    <div className="cons-box">
+                      <b className="row" style={{ gap: 5 }}><InfoCircleIcon size={14} /> 注意事項 / 缺點</b>
+                      <span>{rv.cons}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <p className="review-body">{rv.note}</p>
+
+              <div className="row small muted" style={{ gap: 8 }}>
+                {rv.dust_score && <span className="tag plain">黑紙粉塵 {rv.dust_score}/5</span>}
+                {rv.clump_score && <span className="tag plain">結團硬度 {rv.clump_score}/5</span>}
+                {rv.odor_day7 && <span className="tag plain">第7天除臭 {rv.odor_day7}/5</span>}
+                {rv.accepted === false && <span className="tag warn">貓咪曾拒用</span>}
+                {rv.palatability && <span className="tag plain">適口性 {rv.palatability}/5</span>}
+                {rv.stool_score && <span className="tag plain">便便成形 {rv.stool_score} 分（布里斯托）</span>}
+                {rv.soft_stool_on_switch && <span className="tag warn">換糧首週曾軟便</span>}
+                {rv.bag_days && <span className="tag plain">一包約用 {rv.bag_days} 天</span>}
+              </div>
             </div>
-
-            {(v.pros || v.cons) && (
-              <div className="pros-cons-grid">
-                {v.pros && (
-                  <div className="pros-box">
-                    <b>👍 實測優點</b>
-                    <span>{v.pros}</span>
-                  </div>
-                )}
-                {v.cons && (
-                  <div className="cons-box">
-                    <b>⚠️ 實測注意／缺點</b>
-                    <span>{v.cons}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <p className="review-body">{v.comment}</p>
-
-            {v.photos && v.photos.length > 0 && (
-              <div className="rev-photos-row">
-                {v.photos.map((ph, idx) => (
-                  <ReviewPhotoCard key={idx} photo={ph} />
-                ))}
-              </div>
-            )}
-          </article>
-        ))}
-      </div>
-    </section>
+          ))}
+        </div>
+      </section>
+    </>
   );
 }

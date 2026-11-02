@@ -68,7 +68,7 @@ export default function QA({ productId, initial }: { productId: string; initial:
 
   return (
     <div className="form">
-      {alert && <p className="alert">🚨 {VET_MESSAGE}</p>}
+      {alert && <p className="alert">{VET_MESSAGE}</p>}
       {household ? (
         <div className="row">
           <input
@@ -76,12 +76,12 @@ export default function QA({ productId, initial }: { productId: string; initial:
             style={{ flex: 1 }}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="想問用過的貓奴什麼？（例如：換糧要混幾天？上掀式砂盆會卡嗎？試試輸入「尿不出來」看醫療防護）"
+            placeholder="想問用過的飼主什麼？（例如：換糧要混幾天？上掀式砂盆會卡嗎？試試輸入「尿不出來」看醫療防護）"
           />
           <button onClick={ask} disabled={text.trim().length < 2 || needsVet(text)}>送出提問</button>
         </div>
       ) : (
-        <p className="small muted">請先到 <Link href="/me">我的家</Link> 登入後即可發問與回答。</p>
+        <p className="small muted">請先到 <Link href="/me">我的貓窩</Link> 登入後即可發問與回答。</p>
       )}
       {msg && <p className="small" style={{ color: 'var(--warn)' }}>{msg}</p>}
       {questions.map((q) => (

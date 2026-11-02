@@ -4,8 +4,8 @@ import { getProducts, getQuestions, getReviews, getStats } from '@/lib/data';
 import { daysForHousehold, rank } from '@/lib/scoring';
 import { LITTER_TYPE_LABEL } from '@/lib/sample';
 import Disclaimer from '@/components/Disclaimer';
-import DemoNotice from '@/components/DemoNotice';
 import { ProductPackThumb } from '@/components/ProductVisual';
+import { EditIcon, ReceiptIcon, ArrowUpRightIcon } from '@/components/Icons';
 import ReviewsSection from './ReviewsSection';
 import QA from './qa';
 
@@ -30,43 +30,45 @@ export default async function ProductPage({ params, searchParams }: { params: { 
         <Link href={`/?cat=${product.category}`}>← 返回{product.category === 'litter' ? '貓砂' : '貓飼料'}排行榜</Link>
       </div>
 
-      <DemoNotice />
-
       <section className="product-hero card">
         <div className="product-hero-top">
           <ProductPackThumb product={product} size="lg" />
           <div className="product-hero-info">
             <div className="row" style={{ gap: 8 }}>
               <span className="brand-pill">{product.brand}</span>
-              {position && <span className="tag">🏆 {product.category === 'litter' ? '貓砂' : '飼料'}綜合排行 #{position}</span>}
-              {product.litter_type && <span className="tag">{LITTER_TYPE_LABEL[product.litter_type] ?? product.litter_type}</span>}
+              {position && <span className="tag">{product.category === 'litter' ? '貓砂' : '飼料'}綜合排行 NO.{position}</span>}
+              {product.litter_type && <span className="tag plain">{LITTER_TYPE_LABEL[product.litter_type] ?? product.litter_type}</span>}
               {product.origin && <span className="tag plain">產地：{product.origin}</span>}
-              {product.prescription && <span className="tag warn">⚠️ 處方專用飼料：需經獸醫指示使用</span>}
+              {product.prescription && <span className="tag warn">處方專用飼料：需經獸醫指示使用</span>}
             </div>
             <h1>{product.name}</h1>
             {product.subtitle && <p className="rank-subtitle">{product.subtitle}</p>}
-            {product.specs && <div className="specs-bar">📋 規格成分：{product.specs}｜包裝：{product.pack_weight_kg}kg（參考價 NT${product.ref_price_twd ?? '—'}）</div>}
+            {product.specs && <div className="specs-bar">規格成分：{product.specs} ｜ 包裝：{product.pack_weight_kg}kg（參考價 NT${product.ref_price_twd ?? '—'}）</div>}
             {product.tags && (
               <div className="row" style={{ gap: 6, marginTop: 4 }}>
-                {product.tags.map((t) => <span key={t} className="feature-chip">✦ {t}</span>)}
+                {product.tags.map((t) => <span key={t} className="feature-chip">{t}</span>)}
               </div>
             )}
           </div>
           {!product.prescription && r && (
             <div className="score-box" style={{ minWidth: 96 }}>
               <div className="score-num">{Math.round(r.score * 100)}</div>
-              <div className="score-label">綜合實測分</div>
+              <div className="score-label">SCORE</div>
             </div>
           )}
         </div>
 
         {!product.prescription && (
           <div className="product-actions">
-            <Link href={`/submit?product=${product.id}`} className="btn-primary">✍️ 提交這款的實測 (+80點)</Link>
-            <Link href={`/purchase?product=${product.id}`} className="btn-secondary">🧾 上傳購買證明 (+30點)</Link>
+            <Link href={`/submit?product=${product.id}`} className="btn-primary row" style={{ gap: 6 }}>
+              <EditIcon size={15} /> 提交此款實測
+            </Link>
+            <Link href={`/purchase?product=${product.id}`} className="btn-secondary row" style={{ gap: 6 }}>
+              <ReceiptIcon size={15} /> 上傳購買證明
+            </Link>
             {product.buy_url && (
-              <a className="btn-ghost" href={product.buy_url} target="_blank" rel="noopener sponsored">
-                🛒 查看電商比價（momo / 蝦皮）↗ <small className="muted">（含導購分潤，不影響排名）</small>
+              <a className="btn-ghost row" style={{ gap: 6 }} href={product.buy_url} target="_blank" rel="noopener sponsored">
+                查看電商比價（momo / 蝦皮） <ArrowUpRightIcon size={14} /> <small className="muted">（含分潤，不影響排名）</small>
               </a>
             )}
           </div>
@@ -75,14 +77,14 @@ export default async function ProductPage({ params, searchParams }: { params: { 
 
       {product.prescription ? (
         <div className="alert">
-          ⚠️ 處方飼料屬於獸醫師指示營養配方，本平台依規範不列入一般排行、不計算評分，亦不提供商業導購連結。請務必遵照您的獸醫師診斷與處方使用。
+          處方飼料屬於獸醫師指示營養配方，本平台依規範不列入一般排行、不計算評分，亦不提供商業導購連結。請務必遵照您的獸醫師診斷與處方使用。
         </div>
       ) : r && (
         <section className="card">
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <h3>📊 實測數據面板（基於 {r.n_verified} 筆驗證訂單・{r.n_tests} 戶實測）</h3>
+            <h3>實測數據面板（基於 {r.n_verified} 筆驗證訂單 · {r.n_tests} 戶實測）</h3>
             <div className="row seg">
-              <span className="small muted">切換你家貓數估算用量：</span>
+              <span className="small muted">切換貓數估算用量：</span>
               {[1, 2, 3].map((n) => (
                 <Link key={n} href={`/products/${product.id}?cats=${n}`} className={cats === n ? 'on' : ''}>{n} 隻貓</Link>
               ))}
@@ -96,7 +98,7 @@ export default async function ProductPage({ params, searchParams }: { params: { 
             </div>
             <div className="metric">
               <div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div>
-              <div className="k">一包平均可用（{cats} 貓家庭中位數{r.days_source === 'self' ? '・自填估計' : ''}）</div>
+              <div className="k">一包平均可用（{cats} 貓家庭中位數{r.days_source === 'self' ? ' · 自填估計' : ''}）</div>
             </div>
             <div className="metric">
               <div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div>
@@ -152,7 +154,7 @@ export default async function ProductPage({ params, searchParams }: { params: { 
       <ReviewsSection productId={product.id} initial={reviews} />
 
       <section className="section-block">
-        <h2>🙋 問用過的貓奴（Q&amp;A）</h2>
+        <h2>飼主問答（Q&amp;A）</h2>
         <QA productId={product.id} initial={questions} />
       </section>
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useHousehold, writeLocalState, type CatProfile } from '@/components/useHousehold';
 import { HOUSING_LABEL, type Housing } from '@/lib/types';
+import { CatLogoIcon, VerifiedIcon } from '@/components/Icons';
 
 function lifeStage(birth: string | null) {
   if (!birth) return '成貓';
@@ -39,12 +40,11 @@ export default function Me() {
 
   if (loading) return <main><p className="muted">載入中…</p></main>;
 
-  // ================= 未登入畫面 =================
   if (!household && (!session || isLocalMode)) {
     return (
       <main>
         <section className="login-box card">
-          <div className="tag" style={{ alignSelf: 'flex-start' }}>🐾 喵實測會員中心</div>
+          <div className="tag" style={{ alignSelf: 'flex-start' }}>MEOW TEST LAB · 會員中心</div>
           <h1>登入／註冊「我的貓窩」</h1>
           <p className="muted">
             無需綁定信用卡。登入後即可建立專屬的「養貓花費與換糧避坑筆記本」、提交標準實測提升信譽權重，並解鎖第二階段「智慧砂盆貼片」早鳥測試資格。
@@ -74,14 +74,14 @@ export default function Me() {
                         display_name: prev.household.display_name || email.split('@')[0] || '匿名貓奴',
                       },
                     }));
-                    setMsg('✓ 已成功登入！');
+                    setMsg('已成功登入。');
                     return;
                   }
                   const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: `${location.origin}/me` } });
                   setMsg(error ? error.message : '登入連結已寄出，請到信箱點開。');
                 }}
               >
-                ✉️ 使用此信箱登入／註冊
+                使用此信箱登入／註冊
               </button>
 
               {isLocalMode && (
@@ -91,7 +91,7 @@ export default function Me() {
                     writeLocalState((prev) => ({ ...prev, loggedIn: true }));
                   }}
                 >
-                  ✨ 一鍵快速體驗登入（雙喵實測家 Bruce）
+                  一鍵快速體驗登入（雙喵實測家 Bruce）
                 </button>
               )}
             </div>
@@ -113,12 +113,12 @@ export default function Me() {
         household: { ...prev.household, ...row },
       }));
       setH(row);
-      setMsg('✓ 家庭情境已儲存！排行榜與實測將自動帶入此設定。');
+      setMsg('家庭情境已儲存，排行榜與實測將自動帶入此設定。');
       return;
     }
     const { error } = await db.from('households').upsert({ ...row, ...(household ? { id: household.id } : {}) });
     if (!error) setH(row);
-    setMsg(error ? error.message : '✓ 已儲存。');
+    setMsg(error ? error.message : '已儲存。');
     reload();
   }
 
@@ -139,7 +139,7 @@ export default function Me() {
         household: { ...prev.household, cats: Math.max(prev.household.cats, prev.cats.length + 1) },
       }));
       setCat({ name: '', birth_date: '', long_hair: false, neutered: true, vet_tag: '' });
-      setMsg(`✓ 已新增貓咪「${newCat.name}」！`);
+      setMsg(`已新增貓咪「${newCat.name}」。`);
       return;
     }
     if (!household) return;
@@ -160,8 +160,8 @@ export default function Me() {
     }
   }
 
-  const levelTitle = totalPoints >= 250 ? 'Lv.3 殿堂評鑑官' : totalPoints >= 120 ? 'Lv.2 認證實測員' : 'Lv.1 見習鏟屎官';
-  const totalSpent = local.purchases.reduce((sum, p) => sum + p.price_twd, 0);
+  const levelTitle = totalPoints >= 250 ? 'Lv.3 殿堂評鑑官' : totalPoints >= 120 ? 'Lv.2 認證實測員' : 'Lv.1 見習飼主';
+  const totalSpent = local.purchases.reduce((sum, p) => sum + (p.price_twd ?? 0), 0);
 
   return (
     <main>
@@ -172,7 +172,7 @@ export default function Me() {
             <div>
               <div className="row" style={{ gap: 8 }}>
                 <h1>{household?.display_name}</h1>
-                <span className="tag">🏅 {levelTitle}</span>
+                <span className="tag">{levelTitle}</span>
                 <span className="tag plain">演算法權重 1.0x（已驗證訂單）</span>
               </div>
               <p className="small muted" style={{ margin: '4px 0 0' }}>
@@ -189,13 +189,12 @@ export default function Me() {
 
       {msg && <p className="notice">{msg}</p>}
 
-      {/* 個人化養貓記帳與避坑儀表板（第一階段無需廠商合作即可提供給飼主的自用價值） */}
       <section className="card">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <div>
-            <h3>📊 我的貓窩花費 ＆ 避坑紀錄本</h3>
+            <h3>我的貓窩花費 ＆ 避坑紀錄本</h3>
             <p className="small muted" style={{ margin: 0 }}>
-              不用等廠商給贈品！上傳訂單與實測即可自動幫你記錄「每包吃幾天、哪款會軟便或過敏、每月真實開銷」。
+              不用等廠商給贈品。上傳訂單與實測即可自動幫你記錄「每包吃幾天、哪款會軟便或過敏、每月真實開銷」。
             </p>
           </div>
           <div className="row">
@@ -225,9 +224,8 @@ export default function Me() {
       </section>
 
       <div className="grid2">
-        {/* 家庭情境設定 */}
         <section className="card form">
-          <h3>🏠 家庭情境設定</h3>
+          <h3>家庭情境設定</h3>
           <p className="small muted">這些標籤會自動帶入你的評論，並用來篩選「跟你家條件相似」的排行榜。</p>
           <div className="grid2">
             <label htmlFor="dn">公開暱稱<input id="dn" value={h.display_name} onChange={(e) => setH({ ...h, display_name: e.target.value })} /></label>
@@ -243,16 +241,15 @@ export default function Me() {
             <input id="al" type="checkbox" checked={h.allergy} onChange={(e) => setH({ ...h, allergy: e.target.checked })} />
             家裡有人或貓對粉塵敏感（有過敏性鼻炎／氣喘）
           </label>
-          <button onClick={saveHousehold}>💾 儲存家庭情境</button>
+          <button onClick={saveHousehold}>儲存家庭情境</button>
         </section>
 
-        {/* 我的貓咪檔案 */}
         <section className="card form">
-          <h3>🐱 我的貓咪檔案（{cats.length} 隻）</h3>
+          <h3>我的貓咪檔案（{cats.length} 隻）</h3>
           <div className="cat-cards-list">
             {cats.map((c) => (
               <div key={c.id} className="cat-item">
-                <span className="cat-emoji">{c.long_hair ? '🦁' : '🐱'}</span>
+                <span className="cta-icon" style={{ width: 34, height: 34 }}><CatLogoIcon size={18} /></span>
                 <div style={{ flex: 1 }}>
                   <b>{c.name}</b>
                   <div className="small muted">
@@ -291,50 +288,51 @@ export default function Me() {
         </section>
       </div>
 
-      {/* 信譽等級權益 vs 貢獻存摺（取代需要廠商配合的兌換商城） */}
       <div className="grid2">
         <section className="card">
-          <h3>🎖️ 實測官信譽等級 ＆ 二階段硬體早鳥資格</h3>
+          <h3>實測官信譽等級 ＆ 二階段硬體早鳥資格</h3>
           <p className="small muted">
             第一階段為保持 100% 獨立中立，我們<b>不向廠商索取業配試用包</b>。你的實測貢獻值（EXP）用來解鎖平台信譽權重與第二階段硬體內測資格：
           </p>
           <div className="form">
             <div className="reward-row">
               <div>
-                <b>🌱 Lv.1 見習鏟屎官（0+ EXP）</b>
+                <b>Lv.1 見習飼主（0+ EXP）</b>
                 <div className="small muted">可使用個人花費記帳本、發表公開實測與提問（未驗證訂單權重 0.25x）</div>
               </div>
               <span className="tag plain">已解鎖</span>
             </div>
             <div className="reward-row">
               <div>
-                <b>🔍 Lv.2 認證實測員（120+ EXP）</b>
-                <div className="small muted">已上傳真實訂單驗證，評論獲得「✓ 驗證購買」標章與完整 1.0x 排名權重</div>
+                <b>Lv.2 認證實測員（120+ EXP）</b>
+                <div className="small muted">已上傳真實訂單驗證，評論獲得「已驗證購買」標章與完整 1.0x 排名權重</div>
               </div>
-              <span className="tag">{totalPoints >= 120 ? '✓ 目前等級' : '需 120 EXP'}</span>
+              <span className="tag row" style={{ gap: 4 }}>
+                {totalPoints >= 120 ? <><VerifiedIcon size={12} /> 目前等級</> : '需 120 EXP'}
+              </span>
             </div>
             <div className="reward-row">
               <div>
-                <b>📡 Lv.3 創始評鑑官（200+ EXP）・二階段硬體種子資格</b>
+                <b>Lv.3 創始評鑑官（200+ EXP）· 二階段硬體種子資格</b>
                 <div className="small muted">
-                  優先獲得第二階段「免換盆・加裝式砂盆＆飲水智慧貼片」首批半價／免費內測資格，以及未來官方盲測盒候補權
+                  優先獲得第二階段「免換盆 · 加裝式砂盆＆飲水智慧貼片」首批半價／免費內測資格，以及未來官方盲測盒候補權
                 </div>
               </div>
               <button
                 className="ghost small-btn"
                 onClick={() => {
                   setWaitlistJoined(true);
-                  setMsg('✓ 已將您排入第二階段「加裝式智慧貼片」種子內測名單！您也可以點選上方導覽列「二階段：智慧貼片」預覽功能。');
+                  setMsg('已將您排入第二階段「加裝式智慧貼片」種子內測名單。您也可以點選上方導覽列「二階段：感測貼片」預覽功能。');
                 }}
               >
-                {waitlistJoined ? '✓ 已排入候補' : '登記候補'}
+                {waitlistJoined ? '已排入候補' : '登記候補'}
               </button>
             </div>
           </div>
         </section>
 
         <section className="card">
-          <h3>📒 貢獻值（EXP）累積紀錄</h3>
+          <h3>貢獻值（EXP）累積紀錄</h3>
           <table>
             <tbody>
               <tr><td>提交標準實測（/submit）</td><td className="num"><b>+80 EXP</b></td></tr>
@@ -348,7 +346,7 @@ export default function Me() {
             {local.points.map((pt) => (
               <div key={pt.id} className="ledger-item">
                 <span>{pt.label} <small className="muted">（{pt.created_at}）</small></span>
-                <b className="num" style={{ color: 'var(--accent)' }}>
+                <b className="num" style={{ color: 'var(--ink)' }}>
                   {pt.delta > 0 ? `+${pt.delta}` : pt.delta} EXP
                 </b>
               </div>
@@ -369,7 +367,7 @@ export default function Me() {
             db.auth.signOut();
           }}
         >
-          🚪 登出帳號
+          登出帳號
         </button>
       </div>
     </main>

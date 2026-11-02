@@ -5,6 +5,7 @@ import { useHousehold, writeLocalState } from '@/components/useHousehold';
 import { needsVet, VET_MESSAGE } from '@/lib/guard';
 import { SAMPLE_PRODUCTS } from '@/lib/sample';
 import { ProductPackThumb } from '@/components/ProductVisual';
+import { EditIcon } from '@/components/Icons';
 import type { Product, Review } from '@/lib/types';
 
 const SCALE = [1, 2, 3, 4, 5];
@@ -64,8 +65,8 @@ export default function SubmitTest() {
     return (
       <main>
         <section className="card">
-          <h1>✍️ 提交標準實測</h1>
-          <p>請先到 <Link href="/me"><b>我的家</b></Link> 一鍵登入並確認家庭情境，即可開始填寫實測並領取 +80 點！</p>
+          <h1>提交標準實測</h1>
+          <p>請先到 <Link href="/me"><b>我的貓窩</b></Link> 一鍵登入並確認家庭情境，即可開始填寫實測並領取 +80 EXP。</p>
           <Link href="/me" className="btn-primary" style={{ alignSelf: 'flex-start' }}>前往登入 →</Link>
         </section>
       </main>
@@ -110,7 +111,7 @@ export default function SubmitTest() {
       }));
       setBusy(false);
       setSubmittedId(product.id);
-      setMsg(`🎉 實測已成功送出！已為您入帳 +${pts} 點，您的評論已經同步顯示在商品頁面中。`);
+      setMsg(`實測已成功送出，已為您入帳 +${pts} EXP，您的評論已經同步顯示在商品頁面中。`);
       return;
     }
 
@@ -132,7 +133,7 @@ export default function SubmitTest() {
       bag_days: bagDays && bagDays >= 1 && bagDays <= 365 ? Math.round(bagDays) : null, ...row,
     });
     setBusy(false);
-    setMsg(error ? (error.code === '23505' ? '這款商品的這次實測已經送過了。' : error.message) : `🎉 已送出，獲得 +${pts} 點！`);
+    setMsg(error ? (error.code === '23505' ? '這款商品的這次實測已經送過了。' : error.message) : `已送出，獲得 +${pts} EXP。`);
     if (!error) setSubmittedId(product.id);
   }
 
@@ -174,13 +175,13 @@ export default function SubmitTest() {
       <section className="hero-compact card">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <div>
-            <h1>✍️ 居家 3 分鐘標準實測</h1>
+            <h1 className="row" style={{ gap: 8 }}><EditIcon size={20} /> 居家 3 分鐘標準實測</h1>
             <p className="muted" style={{ margin: 0 }}>
-              點數只看「是否完成填寫」，與你給幾分完全無關。你的家庭標籤（<b>{household.display_name} · {household.cats} 隻貓</b>）將自動帶入。
+              貢獻值（EXP）只看「是否完成填寫」，與你給幾分完全無關。你的家庭標籤（<b>{household.display_name} · {household.cats} 隻貓</b>）將自動帶入。
             </p>
           </div>
-          <span className="points-badge" style={{ fontSize: '1rem', padding: '6px 14px' }}>
-            完成獎勵 +{day === 30 ? 50 : 80} 點
+          <span className="points-badge" style={{ fontSize: '0.85rem', padding: '6px 12px' }}>
+            完成獎勵 +{day === 30 ? 50 : 80} EXP
           </span>
         </div>
       </section>
@@ -191,12 +192,12 @@ export default function SubmitTest() {
             1. 選擇要實測的商品
             <select id="product" value={productId} onChange={(e) => { setProductId(e.target.value); setSubmittedId(null); }}>
               <option value="">選擇商品</option>
-              <optgroup label="🍖 熱門貓飼料">
+              <optgroup label="熱門貓飼料">
                 {products.filter((p) => p.category === 'food' && !p.prescription).map((p) => (
                   <option key={p.id} value={p.id}>{p.brand}｜{p.name}</option>
                 ))}
               </optgroup>
-              <optgroup label="🪣 熱門貓砂">
+              <optgroup label="熱門貓砂">
                 {products.filter((p) => p.category === 'litter' && !p.prescription).map((p) => (
                   <option key={p.id} value={p.id}>{p.brand}｜{p.name}</option>
                 ))}
@@ -207,8 +208,8 @@ export default function SubmitTest() {
           <label htmlFor="day">
             2. 實測階段
             <select id="day" value={day} onChange={(e) => setDay(Number(e.target.value))}>
-              <option value={0}>開箱第一次標準實測（+80 點）</option>
-              <option value={30}>使用滿第 30 天長期追蹤（+50 點）</option>
+              <option value={0}>開箱第一次標準實測（+80 EXP）</option>
+              <option value={30}>使用滿第 30 天長期追蹤（+50 EXP）</option>
             </select>
           </label>
         </div>
@@ -225,25 +226,25 @@ export default function SubmitTest() {
 
         {product?.category === 'litter' && (
           <>
-            <h3>🪣 貓砂標準實測項目</h3>
+            <h3>貓砂標準實測項目</h3>
             <div className="grid2">
-              <ScalePills k="dust" label="① 黑紙側光粉塵測試" hint="在黑色卡紙倒一杯砂，手機手電筒貼平側照" low="幾乎零粉塵" high="煙霧迷漫" />
-              <ScalePills k="clump" label="② 20ml 滴水結團硬度" hint="倒入 20ml 常溫水，靜置 60 秒後用貓砂鏟夾起" low="一夾就散" high="硬如石頭" />
-              <ScalePills k="tracking" label="③ 帶砂沙漠化程度" hint="使用一週後，砂盆外落砂墊與地板的顆粒量" low="幾乎不帶砂" high="滿地沙漠" />
-              <ScalePills k="odor_d7" label="④ 第 7 天除臭表現" hint="站在距離砂盆 1 公尺處的自然氣味感受" low="尿騷味濃" high="完全無異味" />
+              <ScalePills k="dust" label="01. 黑紙側光粉塵測試" hint="在黑色卡紙倒一杯砂，手機手電筒貼平側照" low="幾乎零粉塵" high="煙霧迷漫" />
+              <ScalePills k="clump" label="02. 20ml 滴水結團硬度" hint="倒入 20ml 常溫水，靜置 60 秒後用貓砂鏟夾起" low="一夾就散" high="硬如石頭" />
+              <ScalePills k="tracking" label="03. 帶砂沙漠化程度" hint="使用一週後，砂盆外落砂墊與地板的顆粒量" low="幾乎不帶砂" high="滿地沙漠" />
+              <ScalePills k="odor_d7" label="04. 第 7 天除臭表現" hint="站在距離砂盆 1 公尺處的自然氣味感受" low="尿騷味濃" high="完全無異味" />
             </div>
-            <Check k="accepted" label="✓ 貓咪願意正常進盆使用，沒有在砂盆外憋尿或亂尿" />
+            <Check k="accepted" label="貓咪願意正常進盆使用，沒有在砂盆外憋尿或亂尿" />
           </>
         )}
 
         {product?.category === 'food' && (
           <>
-            <h3>🍖 貓飼料飼主觀察項目（非醫療診斷）</h3>
+            <h3>貓飼料飼主觀察項目（非醫療診斷）</h3>
             <div className="grid2">
-              <Check k="palatability" label="✓ 適口性佳（放飯後願意主動吃完，不需額外拌罐頭誘食）" />
-              <Check k="soft_stool_on_switch" label="⚠️ 換糧第一週內曾出現軟便或拉肚子" />
-              <Check k="vomit_weekly" label="⚠️ 每週發生嘔吐（含吐飼料或毛球）1 次以上" />
-              <Check k="vet_suggested" label="🩺 這款飼料是獸醫師曾建議我購買的" />
+              <Check k="palatability" label="適口性佳（放飯後願意主動吃完，不需額外拌罐頭誘食）" />
+              <Check k="soft_stool_on_switch" label="換糧第一週內曾出現軟便或拉肚子" />
+              <Check k="vomit_weekly" label="每週發生嘔吐（含吐飼料或毛球）1 次以上" />
+              <Check k="vet_suggested" label="這款飼料是獸醫師曾建議我購買的" />
             </div>
 
             <div className="grid2">
@@ -260,14 +261,14 @@ export default function SubmitTest() {
 
         {product && (
           <>
-            <h3>📝 實測優缺點與心得分享</h3>
+            <h3>實測優缺點與心得分享</h3>
             <div className="grid2">
               <label htmlFor="pros">
-                👍 最滿意的優點（選填）
+                最滿意的優點（選填）
                 <input id="pros" value={pros} onChange={(e) => set('pros', e.target.value)} placeholder="例如：適口性超好、便臭味明顯變淡" />
               </label>
               <label htmlFor="cons">
-                ⚠️ 需要注意的缺點（選填）
+                需要注意的缺點（選填）
                 <input id="cons" value={cons} onChange={(e) => set('cons', e.target.value)} placeholder="例如：蛋白質較高換糧要慢、夾鏈袋不好封" />
               </label>
             </div>
@@ -278,7 +279,7 @@ export default function SubmitTest() {
                 <input id="bag_days" type="number" min={1} max={365} value={String(f.bag_days ?? '')} onChange={(e) => set('bag_days', e.target.value)} placeholder="例如：28" />
               </label>
               <label htmlFor="photos">
-                📷 附上實測照片（黑紙粉塵／結團／顆粒照，選填）
+                附上實測照片（黑紙粉塵／結團／顆粒照，選填）
                 <input id="photos" type="file" accept="image/*" multiple onChange={(e) => setPhotos(e.target.files)} />
               </label>
             </div>
@@ -294,15 +295,15 @@ export default function SubmitTest() {
               />
             </label>
 
-            {hasEmergency && <p className="alert">🚨 {VET_MESSAGE}</p>}
+            {hasEmergency && <p className="alert">{VET_MESSAGE}</p>}
 
             <div className="row" style={{ gap: 12 }}>
               <button onClick={submit} disabled={busy || hasEmergency}>
-                {busy ? '送出中…' : `🚀 送出實測，立即領取 +${day === 30 ? 50 : 80} 點`}
+                {busy ? '送出中…' : `送出實測，立即領取 +${day === 30 ? 50 : 80} EXP`}
               </button>
               {submittedId && (
                 <Link href={`/products/${submittedId}`} className="btn-secondary">
-                  👉 前往「{product.brand}」商品頁查看你的評論 →
+                  前往「{product.brand}」商品頁查看你的評論 →
                 </Link>
               )}
             </div>
