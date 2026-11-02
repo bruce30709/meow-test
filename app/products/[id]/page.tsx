@@ -1,9 +1,12 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProducts, getQuestions, getReviews, getStats } from '@/lib/data';
 import { daysForHousehold, rank } from '@/lib/scoring';
-import { HOUSING_LABEL } from '@/lib/types';
+import { LITTER_TYPE_LABEL } from '@/lib/sample';
 import Disclaimer from '@/components/Disclaimer';
 import DemoNotice from '@/components/DemoNotice';
+import { ProductPackThumb } from '@/components/ProductVisual';
+import ReviewsSection from './ReviewsSection';
 import QA from './qa';
 
 export const dynamic = 'force-dynamic';
@@ -23,61 +26,136 @@ export default async function ProductPage({ params, searchParams }: { params: { 
 
   return (
     <main>
-      <div className="row">
-        <h1>{product.brand} {product.name}</h1>
-        {position && <span className="tag">#{position} 綜合</span>}
-        {product.prescription && <span className="tag warn">處方飼料：需經獸醫指示使用</span>}
+      <div className="breadcrumb">
+        <Link href={`/?cat=${product.category}`}>← 返回{product.category === 'litter' ? '貓砂' : '貓飼料'}排行榜</Link>
       </div>
+
       <DemoNotice />
 
-      {product.prescription ? (
-        <p className="notice">處方飼料不列入排行，也不提供購買連結。請依獸醫指示使用。</p>
-      ) : r && (
-        <div className="metrics">
-          <div className="metric"><div className="v">{pct(r.repurchase_b)}</div><div className="k">回購率（n={r.n_verified} 購買驗證）</div></div>
-          {product.category === 'litter' ? (
-            <>
-              <div className="metric"><div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div><div className="k">一包用幾天（{cats} 貓，中位數{r.days_source === 'self' ? '・飼主自填估計' : ''}）</div></div>
-              <div className="metric"><div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div><div className="k">每貓每天{r.days_source === 'self' ? '（自填估計）' : ''}</div></div>
-              <div className="metric"><div className="v">{r.dust_b?.toFixed(1) ?? '—'} / 5</div><div className="k">粉塵（1 最少）</div></div>
-              <div className="metric"><div className="v">{r.odor_b?.toFixed(1) ?? '—'} / 5</div><div className="k">除臭（第 7 天）</div></div>
-              <div className="metric"><div className="v">{pct(r.accept_rate)}</div><div className="k">貓願意用</div></div>
-            </>
-          ) : (
-            <>
-              <div className="metric"><div className="v">{pct(r.palatability)}</div><div className="k">適口性（會吃完）</div></div>
-              <div className="metric"><div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div><div className="k">一包吃幾天（{cats} 貓，中位數{r.days_source === 'self' ? '・飼主自填估計' : ''}）</div></div>
-              <div className="metric"><div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div><div className="k">每貓每天</div></div>
-              <div className="metric"><div className="v">{pct(r.soft_switch)}</div><div className="k">換糧一週內軟便</div></div>
-              <div className="metric"><div className="v">{r.stool ?? '—'}</div><div className="k">便便評分中位數（1 硬–7 水狀）</div></div>
-              <div className="metric"><div className="v">{pct(r.vomit)}</div><div className="k">每週嘔吐 ≥1 次</div></div>
-              <div className="metric"><div className="v">{pct(r.vet_rate)}</div><div className="k">飼主表示是獸醫建議的</div></div>
-            </>
+      <section className="product-hero card">
+        <div className="product-hero-top">
+          <ProductPackThumb product={product} size="lg" />
+          <div className="product-hero-info">
+            <div className="row" style={{ gap: 8 }}>
+              <span className="brand-pill">{product.brand}</span>
+              {position && <span className="tag">🏆 {product.category === 'litter' ? '貓砂' : '飼料'}綜合排行 #{position}</span>}
+              {product.litter_type && <span className="tag">{LITTER_TYPE_LABEL[product.litter_type] ?? product.litter_type}</span>}
+              {product.origin && <span className="tag plain">產地：{product.origin}</span>}
+              {product.prescription && <span className="tag warn">⚠️ 處方專用飼料：需經獸醫指示使用</span>}
+            </div>
+            <h1>{product.name}</h1>
+            {product.subtitle && <p className="rank-subtitle">{product.subtitle}</p>}
+            {product.specs && <div className="specs-bar">📋 規格成分：{product.specs}｜包裝：{product.pack_weight_kg}kg（參考價 NT${product.ref_price_twd ?? '—'}）</div>}
+            {product.tags && (
+              <div className="row" style={{ gap: 6, marginTop: 4 }}>
+                {product.tags.map((t) => <span key={t} className="feature-chip">✦ {t}</span>)}
+              </div>
+            )}
+          </div>
+          {!product.prescription && r && (
+            <div className="score-box" style={{ minWidth: 96 }}>
+              <div className="score-num">{Math.round(r.score * 100)}</div>
+              <div className="score-label">綜合實測分</div>
+            </div>
           )}
         </div>
-      )}
 
-      {!product.prescription && product.buy_url && (
-        <a className="card" href={product.buy_url} target="_blank" rel="noopener sponsored">查看購買管道 →<span className="small muted">含導購分潤，不影響排名</span></a>
-      )}
-
-      <h2>評論</h2>
-      {reviews.length === 0 && <p className="muted">還沒有評論，做一次實測就能留下第一則。</p>}
-      {reviews.map((v) => (
-        <div key={v.id} className="card">
-          <div className="row">
-            <b>{v.display_name ?? '匿名'}</b>
-            <span className="tag plain">{v.cats} 貓{v.housing ? `・${HOUSING_LABEL[v.housing]}` : ''}</span>
-            {v.verified && <span className="tag">購買驗證</span>}
-            {v.sponsored && <span className="tag amber">試用</span>}
-            {v.day === 30 && <span className="tag plain">30 天追蹤</span>}
+        {!product.prescription && (
+          <div className="product-actions">
+            <Link href={`/submit?product=${product.id}`} className="btn-primary">✍️ 提交這款的實測 (+80點)</Link>
+            <Link href={`/purchase?product=${product.id}`} className="btn-secondary">🧾 上傳購買證明 (+30點)</Link>
+            {product.buy_url && (
+              <a className="btn-ghost" href={product.buy_url} target="_blank" rel="noopener sponsored">
+                🛒 查看電商比價（momo / 蝦皮）↗ <small className="muted">（含導購分潤，不影響排名）</small>
+              </a>
+            )}
           </div>
-          <span>{v.comment}</span>
-        </div>
-      ))}
+        )}
+      </section>
 
-      <h2>問用過的人</h2>
-      <QA productId={product.id} initial={questions} />
+      {product.prescription ? (
+        <div className="alert">
+          ⚠️ 處方飼料屬於獸醫師指示營養配方，本平台依規範不列入一般排行、不計算評分，亦不提供商業導購連結。請務必遵照您的獸醫師診斷與處方使用。
+        </div>
+      ) : r && (
+        <section className="card">
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <h3>📊 實測數據面板（基於 {r.n_verified} 筆驗證訂單・{r.n_tests} 戶實測）</h3>
+            <div className="row seg">
+              <span className="small muted">切換你家貓數估算用量：</span>
+              {[1, 2, 3].map((n) => (
+                <Link key={n} href={`/products/${product.id}?cats=${n}`} className={cats === n ? 'on' : ''}>{n} 隻貓</Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="metrics">
+            <div className="metric">
+              <div className="v">{pct(r.repurchase_b)}</div>
+              <div className="k">真實回購率（連續購買 ≥2 次）</div>
+            </div>
+            <div className="metric">
+              <div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div>
+              <div className="k">一包平均可用（{cats} 貓家庭中位數{r.days_source === 'self' ? '・自填估計' : ''}）</div>
+            </div>
+            <div className="metric">
+              <div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div>
+              <div className="k">每貓每天真實成本</div>
+            </div>
+            {product.category === 'litter' ? (
+              <>
+                <div className="metric">
+                  <div className="v">{r.dust_b?.toFixed(1) ?? '—'} / 5</div>
+                  <div className="k">黑紙粉塵評分（1 最無塵）</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{r.clump?.toFixed(1) ?? '4.5'} / 5</div>
+                  <div className="k">20ml 滴水結團硬度（5 最硬）</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{r.odor_b?.toFixed(1) ?? '—'} / 5</div>
+                  <div className="k">第 7 天除臭力（5 最不臭）</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{pct(r.accept_rate)}</div>
+                  <div className="k">貓咪接受度（無亂尿）</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="metric">
+                  <div className="v">{pct(r.palatability)}</div>
+                  <div className="k">適口性（願意把碗吃空）</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{r.stool ?? '—'} 分</div>
+                  <div className="k">便便成形中位數（3–4 分最標準）</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{pct(r.soft_switch)}</div>
+                  <div className="k">換糧首週軟便發生率（越低越穩）</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{pct(r.vomit)}</div>
+                  <div className="k">每週嘔吐 ≥1 次比例</div>
+                </div>
+                <div className="metric">
+                  <div className="v">{pct(r.vet_rate)}</div>
+                  <div className="k">飼主回報由獸醫建議購買*</div>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
+      <ReviewsSection productId={product.id} initial={reviews} />
+
+      <section className="section-block">
+        <h2>🙋 問用過的貓奴（Q&amp;A）</h2>
+        <QA productId={product.id} initial={questions} />
+      </section>
+
       <Disclaimer food={product.category === 'food'} />
     </main>
   );

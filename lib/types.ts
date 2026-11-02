@@ -6,8 +6,15 @@ export type Product = {
   category: Category;
   brand: string;
   name: string;
+  subtitle?: string;
+  origin?: string;
+  specs?: string;
+  tags?: string[];
+  accent_color?: string;
+  image_svg?: 'royal' | 'orijen' | 'nutram' | 'acana' | 'farmina' | 'everclean' | 'armhammer' | 'pidan' | 'odout' | 'dogcatstar' | 'ladyn';
   litter_type?: string | null;
   pack_weight_kg?: number | null;
+  ref_price_twd?: number | null;
   life_stage?: string | null;
   prescription: boolean;
   buy_url?: string | null;
@@ -25,6 +32,8 @@ export type Stats = {
   days_source: 'purchase' | 'self' | null;
   dust: number | null;
   dust_w: number;
+  clump?: number | null;
+  tracking?: number | null;
   odor: number | null;
   odor_w: number;
   accept_rate: number | null;
@@ -39,11 +48,17 @@ export type Stats = {
 export type Ranked = Product & Stats & {
   score: number;
   eligible: boolean;
-  n_verified_all: number; // 全站購買驗證數（進榜門檻看這個，不看篩選後的情境）
-  cost_fallback: boolean; // 這個情境沒有成本資料，暫用全站數字
+  n_verified_all: number;
+  cost_fallback: boolean;
   dust_b: number | null;
   odor_b: number | null;
   repurchase_b: number | null;
+};
+
+export type ReviewPhoto = {
+  label: string;
+  kind: 'dust' | 'clump' | 'kibble' | 'pack';
+  caption: string;
 };
 
 export type Review = {
@@ -53,6 +68,17 @@ export type Review = {
   cats: number;
   housing: Housing | null;
   comment: string;
+  pros?: string;
+  cons?: string;
+  source_tag?: string;
+  ratings?: {
+    dust?: number;
+    clump?: number;
+    odor?: number;
+    palatability?: boolean;
+    stool?: number;
+  };
+  photos?: ReviewPhoto[];
   sponsored: boolean;
   verified: boolean;
   day: number;
@@ -68,4 +94,8 @@ export type Question = {
   answers: { id: string; author_name: string; body: string; created_at: string }[];
 };
 
-export const HOUSING_LABEL: Record<Housing, string> = { studio: '套房', apartment: '公寓', house: '透天' };
+export const HOUSING_LABEL: Record<Housing, string> = {
+  studio: '套房（<10坪）',
+  apartment: '公寓／大樓',
+  house: '透天厝',
+};
