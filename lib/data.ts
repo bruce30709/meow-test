@@ -1,5 +1,5 @@
 import { server } from './supabase';
-import { SAMPLE_PRODUCTS, SAMPLE_QUESTIONS, SAMPLE_REVIEWS, SAMPLE_STATS } from './sample';
+import { SAMPLE_PRODUCTS, SAMPLE_QUESTIONS, SAMPLE_REVIEWS, sampleStatsFor } from './sample';
 import type { Product, Question, Review, Stats } from './types';
 
 const num = (v: unknown) => (v == null ? null : Number(v));
@@ -18,7 +18,7 @@ export async function getProduct(id: string): Promise<Product | null> {
 
 export async function getStats(cats?: number, housing?: string): Promise<Stats[]> {
   const db = server();
-  if (!db) return SAMPLE_STATS;
+  if (!db) return sampleStatsFor(cats, housing);
   const { data, error } = await db.rpc('product_stats', { p_cats: cats ?? null, p_housing: housing ?? null });
   if (error) throw error;
   return (data as Record<string, unknown>[]).map((r) => ({
@@ -28,6 +28,7 @@ export async function getStats(cats?: number, housing?: string): Promise<Stats[]
     repurchase_rate: num(r.repurchase_rate),
     median_cat_days: num(r.median_cat_days),
     cost_per_cat_day: num(r.cost_per_cat_day),
+    days_source: r.days_source === 'purchase' || r.days_source === 'self' ? r.days_source : null,
     dust: num(r.dust),
     dust_w: Number(r.dust_w),
     odor: num(r.odor),

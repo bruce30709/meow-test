@@ -44,8 +44,10 @@ export default function SubmitTest() {
     const row = product.category === 'litter'
       ? { dust: n('dust'), clump: n('clump'), tracking: n('tracking'), odor_d3: n('odor_d3'), odor_d7: n('odor_d7'), accepted: b('accepted') }
       : { palatability: b('palatability'), stool_score: n('stool_score'), soft_stool_on_switch: b('soft_stool_on_switch'), vomit_weekly: b('vomit_weekly'), coat: n('coat'), vet_suggested: b('vet_suggested') };
+    const bagDays = n('bag_days');
     const { error } = await db.from('tests').insert({
-      household_id: household.id, product_id: product.id, day, photo_paths: paths, comment: comment || null, ...row,
+      household_id: household.id, product_id: product.id, day, photo_paths: paths, comment: comment || null,
+      bag_days: bagDays && bagDays >= 1 && bagDays <= 365 ? Math.round(bagDays) : null, ...row,
     });
     setBusy(false);
     setMsg(error ? (error.code === '23505' ? '這款商品的這次實測已經送過了。' : error.message) : `已送出，獲得 ${day === 30 ? 50 : 80} 點。`);
@@ -107,6 +109,10 @@ export default function SubmitTest() {
 
         {product && (
           <>
+            <label htmlFor="bag_days">全家一包大約{product.category === 'litter' ? '用' : '吃'}幾天（選填）
+              <span className="small muted">還沒有連續兩次的購買紀錄時，用這個估算「每貓每天成本」。你家目前登記 {household.cats} 隻貓。</span>
+              <input id="bag_days" type="number" min={1} max={365} value={String(f.bag_days ?? '')} onChange={(e) => set('bag_days', e.target.value)} placeholder="例如 21" />
+            </label>
             <label htmlFor="photos">實測照片（選填）<input id="photos" type="file" accept="image/*" multiple onChange={(e) => setPhotos(e.target.files)} /></label>
             <label htmlFor="comment">心得（公開）<textarea id="comment" rows={3} value={comment} onChange={(e) => set('comment', e.target.value)} /></label>
             {needsVet(comment) && <p className="alert">{VET_MESSAGE}</p>}

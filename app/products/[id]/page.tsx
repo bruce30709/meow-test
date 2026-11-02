@@ -37,8 +37,8 @@ export default async function ProductPage({ params, searchParams }: { params: { 
           <div className="metric"><div className="v">{pct(r.repurchase_b)}</div><div className="k">回購率（n={r.n_verified} 購買驗證）</div></div>
           {product.category === 'litter' ? (
             <>
-              <div className="metric"><div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div><div className="k">一包用幾天（{cats} 貓，中位數）</div></div>
-              <div className="metric"><div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div><div className="k">每貓每天</div></div>
+              <div className="metric"><div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div><div className="k">一包用幾天（{cats} 貓，中位數{r.days_source === 'self' ? '・飼主自填估計' : ''}）</div></div>
+              <div className="metric"><div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div><div className="k">每貓每天{r.days_source === 'self' ? '（自填估計）' : ''}</div></div>
               <div className="metric"><div className="v">{r.dust_b?.toFixed(1) ?? '—'} / 5</div><div className="k">粉塵（1 最少）</div></div>
               <div className="metric"><div className="v">{r.odor_b?.toFixed(1) ?? '—'} / 5</div><div className="k">除臭（第 7 天）</div></div>
               <div className="metric"><div className="v">{pct(r.accept_rate)}</div><div className="k">貓願意用</div></div>
@@ -46,6 +46,8 @@ export default async function ProductPage({ params, searchParams }: { params: { 
           ) : (
             <>
               <div className="metric"><div className="v">{pct(r.palatability)}</div><div className="k">適口性（會吃完）</div></div>
+              <div className="metric"><div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div><div className="k">一包吃幾天（{cats} 貓，中位數{r.days_source === 'self' ? '・飼主自填估計' : ''}）</div></div>
+              <div className="metric"><div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div><div className="k">每貓每天</div></div>
               <div className="metric"><div className="v">{pct(r.soft_switch)}</div><div className="k">換糧一週內軟便</div></div>
               <div className="metric"><div className="v">{r.stool ?? '—'}</div><div className="k">便便評分中位數（1 硬–7 水狀）</div></div>
               <div className="metric"><div className="v">{pct(r.vomit)}</div><div className="k">每週嘔吐 ≥1 次</div></div>

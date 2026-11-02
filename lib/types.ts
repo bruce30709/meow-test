@@ -21,6 +21,8 @@ export type Stats = {
   repurchase_rate: number | null;
   median_cat_days: number | null;
   cost_per_cat_day: number | null;
+  // 'purchase'：連續兩次購買推算；'self'：飼主自填「一包用幾天」的備援估計
+  days_source: 'purchase' | 'self' | null;
   dust: number | null;
   dust_w: number;
   odor: number | null;
@@ -37,6 +39,8 @@ export type Stats = {
 export type Ranked = Product & Stats & {
   score: number;
   eligible: boolean;
+  n_verified_all: number; // 全站購買驗證數（進榜門檻看這個，不看篩選後的情境）
+  cost_fallback: boolean; // 這個情境沒有成本資料，暫用全站數字
   dust_b: number | null;
   odor_b: number | null;
   repurchase_b: number | null;

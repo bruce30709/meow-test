@@ -50,7 +50,10 @@ export default function Me() {
 
   async function saveHousehold() {
     if (!db) return;
-    const { error } = await db.from('households').upsert({ ...h, ...(household ? { id: household.id } : {}) });
+    // 空白暱稱會蓋掉資料庫預設值，所以送出前補回「匿名貓奴」
+    const row = { ...h, display_name: h.display_name.trim() || '匿名貓奴' };
+    const { error } = await db.from('households').upsert({ ...row, ...(household ? { id: household.id } : {}) });
+    if (!error) setH(row);
     setMsg(error ? error.message : '已儲存。');
     reload();
   }
@@ -118,6 +121,7 @@ export default function Me() {
         <h3>點數怎麼來</h3>
         <table><tbody>
           <tr><td>上傳訂單（有證明）</td><td className="num">+30</td></tr>
+          <tr><td>同一款湊滿兩張不同日期的證明（解鎖一包用幾天）</td><td className="num">+20</td></tr>
           <tr><td>完成標準實測</td><td className="num">+80</td></tr>
           <tr><td>第 30 天追蹤</td><td className="num">+50</td></tr>
         </tbody></table>

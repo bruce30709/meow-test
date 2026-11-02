@@ -22,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="nav-in">
             <Link href="/" className="logo">喵實測</Link>
             <Link href="/">排行榜</Link>
+            <Link href="/calc">算成本</Link>
             <Link href="/submit">做實測</Link>
             <Link href="/purchase">上傳訂單</Link>
             <Link href="/me">我的家</Link>

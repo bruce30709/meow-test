@@ -22,8 +22,11 @@ export default async function Leaderboard({ searchParams }: { searchParams: SP }
   const cats = searchParams.cats ? Number(searchParams.cats) : undefined;
   const housing = searchParams.housing as Housing | undefined;
 
-  const [products, stats] = await Promise.all([getProducts(), getStats(cats, housing)]);
-  const rows = rank(products, stats, category, sort);
+  const filtered = cats != null || housing != null;
+  const [products, stats, overall] = await Promise.all([
+    getProducts(), getStats(cats, housing), filtered ? getStats() : Promise.resolve(undefined),
+  ]);
+  const rows = rank(products, stats, category, sort, overall);
   const ranked = rows.filter((r) => r.eligible);
   const pending = rows.filter((r) => !r.eligible);
 
@@ -61,23 +64,34 @@ export default async function Leaderboard({ searchParams }: { searchParams: SP }
         ))}
       </div>
 
-      {ranked.length === 0 && <p className="muted">這個情境還沒有商品達到進榜門檻（{MIN_VERIFIED} 筆購買驗證）。</p>}
-      {ranked.map((r, i) => <Row key={r.id} r={r} i={i + 1} category={category} />)}
+      {filtered && (
+        <p className="small muted">
+          已篩選情境：分數用「跟你家相似」的家庭計算，進榜門檻仍看全站購買驗證數（{MIN_VERIFIED} 筆）。
+          這個情境沒有成本資料的商品，暫用全站數字（標 ≈）。
+        </p>
+      )}
+      {ranked.length === 0 && <p className="muted">還沒有商品達到進榜門檻（全站 {MIN_VERIFIED} 筆購買驗證）。</p>}
+      {ranked.map((r, i) => <Row key={r.id} r={r} i={i + 1} category={category} filtered={filtered} />)}
 
       {pending.length > 0 && (
         <>
           <h3>資料累積中</h3>
           <p className="small muted">購買驗證未滿 {MIN_VERIFIED} 筆，暫不排名。上傳訂單可以幫忙累積。</p>
-          {pending.map((r) => <Row key={r.id} r={r} category={category} />)}
+          {pending.map((r) => <Row key={r.id} r={r} category={category} filtered={filtered} />)}
         </>
       )}
+      <Link href="/calc" className="card" style={{ color: 'inherit' }}>
+        <b>你家的貓砂／飼料，每貓每天花多少？</b>
+        <span className="small muted">不用登入，30 秒算出來，順便跟全站比一比 →</span>
+      </Link>
       <p className="small muted">處方飼料不列入排行。</p>
       <Disclaimer food={category === 'food'} />
     </main>
   );
 }
 
-function Row({ r, i, category }: { r: Ranked; i?: number; category: Category }) {
+function Row({ r, i, category, filtered }: { r: Ranked; i?: number; category: Category; filtered: boolean }) {
+  const approx = r.cost_fallback ? '≈' : '';
   return (
     <Link href={`/products/${r.id}`} className="card rank" style={{ color: 'inherit' }}>
       <span className="r">{i ?? '·'}</span>
@@ -86,11 +100,11 @@ function Row({ r, i, category }: { r: Ranked; i?: number; category: Category }) 
         <div className="small muted">
           回購 {pct(r.repurchase_b)}
           {category === 'litter' ? ` · 粉塵 ${r.dust_b?.toFixed(1) ?? '—'}` : ` · 適口性 ${pct(r.palatability)}`}
-          {` · n=${r.n_verified}`}
+          {filtered ? ` · 此情境 n=${r.n_verified}／全站 ${r.n_verified_all}` : ` · n=${r.n_verified}`}
         </div>
       </div>
       {category === 'litter' ? (
-        <div className="big">{r.cost_per_cat_day?.toFixed(1) ?? '—'}<small>元/貓/天</small></div>
+        <div className="big">{r.cost_per_cat_day != null ? `${approx}${r.cost_per_cat_day.toFixed(1)}` : '—'}<small>元/貓/天{r.days_source === 'self' ? '（自填估計）' : ''}</small></div>
       ) : (
         <div className="big">{pct(r.vet_rate)}<small>獸醫建議*</small></div>
       )}
