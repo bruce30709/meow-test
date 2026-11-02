@@ -148,11 +148,11 @@ export default async function Leaderboard({ searchParams }: { searchParams: SP }
             <p className="small muted">輸入一包多少錢、用幾天，30 秒算出你家有沒有買貴，跟全站中位數比一比 →</p>
           </div>
         </Link>
-        <Link href="/submit" className="cta-card">
-          <span className="cta-icon">✍️</span>
+        <Link href="/iot" className="cta-card">
+          <span className="cta-icon">📡</span>
           <div>
-            <b>貢獻你的實測心得（完成即領 +80 點）</b>
-            <p className="small muted">不管給幾分都領一樣點數，累積點數可兌換合作品牌試用包 →</p>
+            <b>第二階段預覽：加裝式「貓砂盆＆飲水」智慧貼片</b>
+            <p className="small muted">不用換砂盆！一貼記錄如廁與喝水、公貓尿閉 LINE 即時警報，數據自動回傳排行榜 →</p>
           </div>
         </Link>
       </div>

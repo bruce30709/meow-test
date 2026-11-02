@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useHousehold, writeLocalState, type CatProfile } from '@/components/useHousehold';
 import { HOUSING_LABEL, type Housing } from '@/lib/types';
@@ -9,12 +10,6 @@ function lifeStage(birth: string | null) {
   return y < 1 ? '幼貓（0–1 歲）' : y < 7 ? '青年成貓（1–6 歲）' : y < 11 ? '熟齡貓（7–10 歲）' : '高齡老貓（10 歲以上）';
 }
 
-const REWARDS = [
-  { id: 'rw1', title: '臭味滾 Odout 極細抗臭豆腐砂 2L 體驗包', cost: 150, tag: '免運寄送到家' },
-  { id: 'rw2', title: '紐頓 Nutram T22 無穀火雞＋雞肉 100g 試吃包 ×2', cost: 120, tag: '換糧7日體驗組' },
-  { id: 'rw3', title: '法米納 N&D 頂級無穀雞肉石榴 50g 隨手包 ×3', cost: 120, tag: '挑嘴貓測試組' },
-];
-
 export default function Me() {
   const { db, isLocalMode, session, household, local, totalPoints, loading, reload } = useHousehold();
   const [email, setEmail] = useState('bruce30709@gmail.com');
@@ -24,6 +19,7 @@ export default function Me() {
   const [cats, setCats] = useState<CatProfile[]>([]);
   const [cat, setCat] = useState({ name: '', birth_date: '', long_hair: false, neutered: true, vet_tag: '' });
   const [msg, setMsg] = useState('');
+  const [waitlistJoined, setWaitlistJoined] = useState(true);
 
   useEffect(() => {
     if (!household) return;
@@ -43,15 +39,15 @@ export default function Me() {
 
   if (loading) return <main><p className="muted">載入中…</p></main>;
 
-  // ================= 未登入畫面（提供完整登入體驗） =================
+  // ================= 未登入畫面 =================
   if (!household && (!session || isLocalMode)) {
     return (
       <main>
         <section className="login-box card">
-          <div className="login-badge">🐾 喵實測會員中心</div>
-          <h1>登入／註冊「我的家」</h1>
+          <div className="tag" style={{ alignSelf: 'flex-start' }}>🐾 喵實測會員中心</div>
+          <h1>登入／註冊「我的貓窩」</h1>
           <p className="muted">
-            登入後即可設定你家的貓咪數量與居住空間，提交標準實測（+80 點）、上傳訂單截圖（+30 點），並累積點數免費兌換合作品牌試用包。
+            無需綁定信用卡。登入後即可建立專屬的「養貓花費與換糧避坑筆記本」、提交標準實測提升信譽權重，並解鎖第二階段「智慧砂盆貼片」早鳥測試資格。
           </p>
 
           <div className="form" style={{ marginTop: 8 }}>
@@ -164,17 +160,8 @@ export default function Me() {
     }
   }
 
-  function redeemReward(title: string, cost: number) {
-    if (totalPoints < cost) return setMsg(`點數不足（需要 ${cost} 點，目前 ${totalPoints} 點）。快去完成一次實測 (+80 點) 吧！`);
-    writeLocalState((prev) => ({
-      ...prev,
-      points: [
-        { id: `pt-${Date.now()}`, delta: -cost, reason: 'redeem', label: `兌換試用包：${title}`, created_at: new Date().toISOString().slice(0, 10) },
-        ...prev.points,
-      ],
-    }));
-    setMsg(`🎉 兌換成功！「${title}」已扣除 ${cost} 點（提交該款實測時系統將自動標註「試用」）。`);
-  }
+  const levelTitle = totalPoints >= 250 ? 'Lv.3 殿堂評鑑官' : totalPoints >= 120 ? 'Lv.2 認證實測員' : 'Lv.1 見習鏟屎官';
+  const totalSpent = local.purchases.reduce((sum, p) => sum + p.price_twd, 0);
 
   return (
     <main>
@@ -185,21 +172,57 @@ export default function Me() {
             <div>
               <div className="row" style={{ gap: 8 }}>
                 <h1>{household?.display_name}</h1>
-                <span className="tag">🏅 創始實測員</span>
+                <span className="tag">🏅 {levelTitle}</span>
+                <span className="tag plain">演算法權重 1.0x（已驗證訂單）</span>
               </div>
-              <p className="small muted" style={{ margin: 0 }}>
+              <p className="small muted" style={{ margin: '4px 0 0' }}>
                 帳號：{household?.email ?? '已驗證會員'} · {h.cats} 隻貓 · {HOUSING_LABEL[h.housing]}
               </p>
             </div>
           </div>
           <div className="points-hero">
-            <div className="points-hero-num">🪙 {totalPoints}</div>
-            <div className="small muted">可用實測點數</div>
+            <div className="points-hero-num">{totalPoints} EXP</div>
+            <div className="small muted">實測貢獻值（不隨評分高低變動）</div>
           </div>
         </div>
       </section>
 
       {msg && <p className="notice">{msg}</p>}
+
+      {/* 個人化養貓記帳與避坑儀表板（第一階段無需廠商合作即可提供給飼主的自用價值） */}
+      <section className="card">
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div>
+            <h3>📊 我的貓窩花費 ＆ 避坑紀錄本</h3>
+            <p className="small muted" style={{ margin: 0 }}>
+              不用等廠商給贈品！上傳訂單與實測即可自動幫你記錄「每包吃幾天、哪款會軟便或過敏、每月真實開銷」。
+            </p>
+          </div>
+          <div className="row">
+            <Link href="/purchase" className="btn-secondary">＋ 記一筆訂單</Link>
+            <Link href="/submit" className="btn-primary">＋ 記一筆換糧／換砂實測</Link>
+          </div>
+        </div>
+
+        <div className="metrics">
+          <div className="metric">
+            <div className="v">NT${totalSpent.toLocaleString()}</div>
+            <div className="k">已登錄訂單累計金額（{local.purchases.length} 筆）</div>
+          </div>
+          <div className="metric">
+            <div className="v">NT${Math.round(28.5 * h.cats * 30).toLocaleString()}</div>
+            <div className="k">{h.cats} 貓每月預估耗材開銷（飼料＋砂）</div>
+          </div>
+          <div className="metric">
+            <div className="v">21 天</div>
+            <div className="k">法國皇家 IN27（2kg）你家雙貓平均週期</div>
+          </div>
+          <div className="metric">
+            <div className="v">0 次軟便</div>
+            <div className="k">目前主力糧（皇家 IN27）腸胃適應紀錄</div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid2">
         {/* 家庭情境設定 */}
@@ -235,7 +258,7 @@ export default function Me() {
                   <div className="small muted">
                     {lifeStage(c.birth_date)} · {c.long_hair ? '長毛貓' : '短毛貓'} · {c.neutered ? '已結紮' : '未結紮'}
                   </div>
-                  {c.vet_tags.map((t) => <span key={t} className="tag plain" style={{ marginTop: 4 }}>獸醫叮嚀：{t}</span>)}
+                  {c.vet_tags.map((t) => <span key={t} className="tag plain" style={{ marginTop: 4 }}>照護備註：{t}</span>)}
                 </div>
                 {isLocalMode && (
                   <button className="ghost small-btn" onClick={() => removeCat(c.id)}>移除</button>
@@ -268,43 +291,65 @@ export default function Me() {
         </section>
       </div>
 
-      {/* 點數兌換與點數存摺 */}
+      {/* 信譽等級權益 vs 貢獻存摺（取代需要廠商配合的兌換商城） */}
       <div className="grid2">
         <section className="card">
-          <h3>🎁 點數兌換試用包專區</h3>
-          <p className="small muted">點數只看實測完成度，與你給幾分完全無關。兌換試用包後的評論會自動誠實揭露「試用」標籤。</p>
+          <h3>🎖️ 實測官信譽等級 ＆ 二階段硬體早鳥資格</h3>
+          <p className="small muted">
+            第一階段為保持 100% 獨立中立，我們<b>不向廠商索取業配試用包</b>。你的實測貢獻值（EXP）用來解鎖平台信譽權重與第二階段硬體內測資格：
+          </p>
           <div className="form">
-            {REWARDS.map((rw) => (
-              <div key={rw.id} className="reward-row">
-                <div>
-                  <b>{rw.title}</b>
-                  <div className="small muted">{rw.tag}</div>
-                </div>
-                <button className="ghost small-btn" onClick={() => redeemReward(rw.title, rw.cost)}>
-                  🪙 {rw.cost} 點兌換
-                </button>
+            <div className="reward-row">
+              <div>
+                <b>🌱 Lv.1 見習鏟屎官（0+ EXP）</b>
+                <div className="small muted">可使用個人花費記帳本、發表公開實測與提問（未驗證訂單權重 0.25x）</div>
               </div>
-            ))}
+              <span className="tag plain">已解鎖</span>
+            </div>
+            <div className="reward-row">
+              <div>
+                <b>🔍 Lv.2 認證實測員（120+ EXP）</b>
+                <div className="small muted">已上傳真實訂單驗證，評論獲得「✓ 驗證購買」標章與完整 1.0x 排名權重</div>
+              </div>
+              <span className="tag">{totalPoints >= 120 ? '✓ 目前等級' : '需 120 EXP'}</span>
+            </div>
+            <div className="reward-row">
+              <div>
+                <b>📡 Lv.3 創始評鑑官（200+ EXP）・二階段硬體種子資格</b>
+                <div className="small muted">
+                  優先獲得第二階段「免換盆・加裝式砂盆＆飲水智慧貼片」首批半價／免費內測資格，以及未來官方盲測盒候補權
+                </div>
+              </div>
+              <button
+                className="ghost small-btn"
+                onClick={() => {
+                  setWaitlistJoined(true);
+                  setMsg('✓ 已將您排入第二階段「加裝式智慧貼片」種子內測名單！您也可以點選上方導覽列「二階段：智慧貼片」預覽功能。');
+                }}
+              >
+                {waitlistJoined ? '✓ 已排入候補' : '登記候補'}
+              </button>
+            </div>
           </div>
         </section>
 
         <section className="card">
-          <h3>📒 點數存摺明細與獲取規則</h3>
+          <h3>📒 貢獻值（EXP）累積紀錄</h3>
           <table>
             <tbody>
-              <tr><td>完成第一次標準實測（/submit）</td><td className="num"><b>+80 點</b></td></tr>
-              <tr><td>完成第 30 天長期追蹤實測</td><td className="num"><b>+50 點</b></td></tr>
-              <tr><td>上傳購買訂單證明（/purchase）</td><td className="num"><b>+30 點</b></td></tr>
-              <tr><td>同款湊滿兩張不同日期訂單（解鎖使用週期）</td><td className="num"><b>+20 點</b></td></tr>
+              <tr><td>提交標準實測（/submit）</td><td className="num"><b>+80 EXP</b></td></tr>
+              <tr><td>第 30 天長期追蹤更新</td><td className="num"><b>+50 EXP</b></td></tr>
+              <tr><td>上傳購買訂單證明（/purchase）</td><td className="num"><b>+30 EXP</b></td></tr>
+              <tr><td>同款湊滿兩張訂單（算出真實消耗天數）</td><td className="num"><b>+20 EXP</b></td></tr>
             </tbody>
           </table>
-          <h4 style={{ margin: '10px 0 4px', fontSize: '.9rem' }}>最近入帳紀錄</h4>
+          <h4 style={{ margin: '10px 0 4px', fontSize: '.9rem' }}>最近紀錄</h4>
           <div className="ledger-list">
             {local.points.map((pt) => (
               <div key={pt.id} className="ledger-item">
                 <span>{pt.label} <small className="muted">（{pt.created_at}）</small></span>
-                <b className="num" style={{ color: pt.delta > 0 ? 'var(--accent)' : 'var(--warn)' }}>
-                  {pt.delta > 0 ? `+${pt.delta}` : pt.delta} 點
+                <b className="num" style={{ color: 'var(--accent)' }}>
+                  {pt.delta > 0 ? `+${pt.delta}` : pt.delta} EXP
                 </b>
               </div>
             ))}
