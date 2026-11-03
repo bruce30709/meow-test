@@ -1,15 +1,14 @@
+'use client';
 import Link from 'next/link';
-import { getProducts, getStats } from '@/lib/data';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { daysForHousehold, MIN_VERIFIED, rank, type SortKey } from '@/lib/scoring';
-import { LITTER_TYPE_LABEL } from '@/lib/sample';
-import { HOUSING_LABEL, type Category, type Housing, type Ranked } from '@/lib/types';
+import { LITTER_TYPE_LABEL, SAMPLE_PRODUCTS, sampleStatsFor } from '@/lib/sample';
+import { HOUSING_LABEL, type Category, type Housing, type Product, type Ranked } from '@/lib/types';
+import { browser } from '@/lib/supabase';
 import Disclaimer from '@/components/Disclaimer';
 import { ProductPackThumb } from '@/components/ProductVisual';
 import { BowlIcon, LitterIcon, CalcIcon, SensorIcon, VerifiedIcon, ArrowUpRightIcon } from '@/components/Icons';
-
-export const dynamic = 'force-dynamic';
-
-type SP = { cat?: string; sort?: string; cats?: string; housing?: string; sub?: string };
 
 const SORTS: Record<Category, [SortKey, string][]> = {
   food: [['score', '綜合評分'], ['repurchase', '真實回購率'], ['cost', '每日成本最低']],
@@ -18,26 +17,57 @@ const SORTS: Record<Category, [SortKey, string][]> = {
 
 const pct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 
-export default async function Leaderboard({ searchParams }: { searchParams: SP }) {
-  const category: Category = searchParams.cat === 'litter' ? 'litter' : 'food';
-  const sort = (SORTS[category].find(([k]) => k === searchParams.sort)?.[0] ?? 'score') as SortKey;
-  const cats = searchParams.cats ? Number(searchParams.cats) : undefined;
-  const housing = searchParams.housing as Housing | undefined;
-  const sub = searchParams.sub || undefined;
+export default function LeaderboardPage() {
+  return (
+    <Suspense fallback={<main><p className="muted">載入排行榜中…</p></main>}>
+      <LeaderboardContent />
+    </Suspense>
+  );
+}
+
+function LeaderboardContent() {
+  const sp = useSearchParams();
+  const category: Category = sp.get('cat') === 'litter' ? 'litter' : 'food';
+  const rawSort = sp.get('sort') ?? 'score';
+  const sort = (SORTS[category].find(([k]) => k === rawSort)?.[0] ?? 'score') as SortKey;
+  const catsParam = sp.get('cats');
+  const cats = catsParam ? Number(catsParam) : undefined;
+  const housing = (sp.get('housing') as Housing | null) ?? undefined;
+  const sub = sp.get('sub') || undefined;
+
+  const [products, setProducts] = useState<Product[]>(SAMPLE_PRODUCTS);
+
+  useEffect(() => {
+    const db = browser();
+    if (!db) return;
+    db.from('products').select('*').order('brand').then(({ data }) => {
+      if (data && data.length > 0) {
+        const sampleMap = new Map(SAMPLE_PRODUCTS.map((p) => [p.id, p]));
+        setProducts((data as Product[]).map((p) => ({ ...sampleMap.get(p.id), ...p })));
+      }
+    });
+  }, []);
 
   const filtered = cats != null || housing != null;
-  const [products, stats, overall] = await Promise.all([
-    getProducts(), getStats(cats, housing), filtered ? getStats() : Promise.resolve(undefined),
-  ]);
+  const stats = sampleStatsFor(cats, housing);
+  const overall = filtered ? sampleStatsFor() : undefined;
+
   const allRows = rank(products, stats, category, sort, overall);
   const rows = sub && category === 'litter' ? allRows.filter((r) => r.litter_type === sub) : allRows;
   const ranked = rows.filter((r) => r.eligible);
   const pending = rows.filter((r) => !r.eligible);
   const displayCats = cats ?? 1;
 
-  const href = (patch: Partial<SP>) => {
+  const href = (patch: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
-    const next = { cat: category, sort, cats: searchParams.cats, housing: searchParams.housing, sub: searchParams.sub, ...patch };
+    const next: Record<string, string | undefined> = {
+      cat: category,
+      sort,
+      cats: catsParam ?? undefined,
+      housing,
+      sub,
+      ...patch,
+    };
     Object.entries(next).forEach(([k, v]) => v && q.set(k, String(v)));
     return `/?${q}`;
   };
@@ -162,7 +192,7 @@ function ProductRankCard({
   const medalClass = rankNum === 1 ? 'medal-1' : rankNum === 2 ? 'medal-2' : rankNum === 3 ? 'medal-3' : 'medal-n';
 
   return (
-    <Link href={`/products/${r.id}${cats > 1 ? `?cats=${cats}` : ''}`} className="rank-card">
+    <Link href={`/products/${r.id}`} className="rank-card">
       <div className="rank-card-left">
         <div className={`rank-medal ${medalClass}`}>
           {rankNum ? `NO.${rankNum}` : 'PENDING'}

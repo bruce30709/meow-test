@@ -4,8 +4,6 @@ import DemoNotice from '@/components/DemoNotice';
 import Disclaimer from '@/components/Disclaimer';
 import Calculator, { type CalcProduct } from './Calculator';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata = {
   title: '每貓每天成本計算機｜喵實測',
   description: '輸入一包多少錢、用幾天、幾隻貓，算出每貓每天真正花多少，跟全站中位數比一比。',

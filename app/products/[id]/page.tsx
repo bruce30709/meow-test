@@ -2,18 +2,20 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProducts, getQuestions, getReviews, getStats } from '@/lib/data';
 import { daysForHousehold, rank } from '@/lib/scoring';
-import { LITTER_TYPE_LABEL } from '@/lib/sample';
+import { LITTER_TYPE_LABEL, SAMPLE_PRODUCTS } from '@/lib/sample';
 import Disclaimer from '@/components/Disclaimer';
 import { ProductPackThumb } from '@/components/ProductVisual';
 import { EditIcon, ReceiptIcon, ArrowUpRightIcon } from '@/components/Icons';
 import ReviewsSection from './ReviewsSection';
 import QA from './qa';
 
-export const dynamic = 'force-dynamic';
+export function generateStaticParams() {
+  return SAMPLE_PRODUCTS.map((p) => ({ id: p.id }));
+}
 
 const pct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 
-export default async function ProductPage({ params, searchParams }: { params: { id: string }; searchParams: { cats?: string } }) {
+export default async function ProductPage({ params }: { params: { id: string } }) {
   const [products, stats, reviews, questions] = await Promise.all([
     getProducts(), getStats(), getReviews(params.id), getQuestions(params.id),
   ]);
@@ -22,7 +24,7 @@ export default async function ProductPage({ params, searchParams }: { params: { 
   const all = rank(products, stats, product.category);
   const r = all.find((x) => x.id === product.id);
   const position = r?.eligible ? all.filter((x) => x.eligible).indexOf(r) + 1 : null;
-  const cats = Number(searchParams.cats ?? 2);
+  const cats = 2;
 
   return (
     <main>
@@ -83,12 +85,6 @@ export default async function ProductPage({ params, searchParams }: { params: { 
         <section className="card">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <h3>實測數據面板（基於 {r.n_verified} 筆驗證訂單 · {r.n_tests} 戶實測）</h3>
-            <div className="row seg">
-              <span className="small muted">切換貓數估算用量：</span>
-              {[1, 2, 3].map((n) => (
-                <Link key={n} href={`/products/${product.id}?cats=${n}`} className={cats === n ? 'on' : ''}>{n} 隻貓</Link>
-              ))}
-            </div>
           </div>
 
           <div className="metrics">
@@ -97,8 +93,8 @@ export default async function ProductPage({ params, searchParams }: { params: { 
               <div className="k">真實回購率（連續購買 ≥2 次）</div>
             </div>
             <div className="metric">
-              <div className="v">{daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div>
-              <div className="k">一包平均可用（{cats} 貓家庭中位數{r.days_source === 'self' ? ' · 自填估計' : ''}）</div>
+              <div className="v">{daysForHousehold(r.median_cat_days, 1) ?? '—'} 天 / {daysForHousehold(r.median_cat_days, cats) ?? '—'} 天</div>
+              <div className="k">一包平均可用（單貓家庭 / 雙貓家庭中位數）</div>
             </div>
             <div className="metric">
               <div className="v">NT${r.cost_per_cat_day?.toFixed(1) ?? '—'}</div>

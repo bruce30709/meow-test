@@ -1,7 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rjzibqtfdwvsqqxixlvq.supabase.co';
+const anon =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqemlicXRmZHd2c3FxeGl4bHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MTAwOTUsImV4cCI6MjEwOTI4NjA5NX0.WtUFpoDw9H6fFxWvDCF_kJzrRpfgAcQOmVLkofa8eXA';
 
 export const hasSupabase = Boolean(url && anon);
 
