@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useHousehold, writeLocalState, type CatProfile } from '@/components/useHousehold';
+import { useHousehold, writeLocalState, ensureUuid, isIoTDevMode, type CatProfile } from '@/components/useHousehold';
 import { HOUSING_LABEL, type Housing } from '@/lib/types';
 import { CatLogoIcon, VerifiedIcon } from '@/components/Icons';
 
@@ -13,7 +13,8 @@ function lifeStage(birth: string | null) {
 
 export default function Me() {
   const { db, isLocalMode, session, household, local, totalPoints, loading, reload } = useHousehold();
-  const [email, setEmail] = useState('bruce30709@gmail.com');
+  const [email, setEmail] = useState(isIoTDevMode ? 'bruce30709@gmail.com' : '');
+  const [nickname, setNickname] = useState('');
   const [h, setH] = useState<{ display_name: string; cats: number; housing: Housing; box_type: string; allergy: boolean }>({
     display_name: '', cats: 1, housing: 'apartment', box_type: '', allergy: false,
   });
@@ -31,12 +32,13 @@ export default function Me() {
       box_type: household.box_type ?? '',
       allergy: household.allergy,
     });
-    if (isLocalMode) {
-      setCats(local.cats);
-    } else if (db) {
-      db.from('cats').select('*').then(({ data }) => setCats((data ?? []) as CatProfile[]));
+    setCats(local.cats);
+    if (db && household.id) {
+      db.from('cats').select('*').eq('household_id', household.id).then(({ data }) => {
+        if (data && data.length > 0) setCats(data as CatProfile[]);
+      });
     }
-  }, [db, isLocalMode, household, local.cats]);
+  }, [db, household, local.cats]);
 
   if (loading) return <main><p className="muted">載入中…</p></main>;
 
@@ -47,12 +49,12 @@ export default function Me() {
           <div className="tag" style={{ alignSelf: 'flex-start' }}>MEOW TEST LAB · 會員中心</div>
           <h1>登入／註冊「我的貓窩」</h1>
           <p className="muted">
-            無需綁定信用卡。登入後即可建立專屬的「養貓花費與換糧避坑筆記本」、提交標準實測提升信譽權重，並解鎖第二階段「智慧砂盆貼片」早鳥測試資格。
+            無需綁定信用卡。登入後即可建立專屬的「養貓花費與換糧避坑筆記本」，並提交標準實測累積信譽權重。
           </p>
 
           <div className="form" style={{ marginTop: 8 }}>
             <label htmlFor="email">
-              電子信箱（Magic Link 免密碼登入）
+              電子信箱
               <input
                 id="email"
                 type="email"
@@ -61,37 +63,69 @@ export default function Me() {
                 placeholder="you@example.com"
               />
             </label>
+            <label htmlFor="nickname">
+              公開顯示暱稱（例如：橘座阿母、雙貓奴阿哲）
+              <input
+                id="nickname"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="輸入你想在評論區顯示的稱呼"
+              />
+            </label>
             <div className="row" style={{ gap: 10 }}>
               <button
                 onClick={async () => {
-                  if (isLocalMode || !db) {
+                  const cleanEmail = email.trim();
+                  if (!cleanEmail) {
+                    setMsg('請輸入電子信箱。');
+                    return;
+                  }
+                  const displayName = nickname.trim() || cleanEmail.split('@')[0] || '認證飼主';
+                  const hhId = ensureUuid(local.household?.id);
+                  if (db) {
+                    await db.from('households').upsert({
+                      id: hhId,
+                      email: cleanEmail,
+                      display_name: displayName,
+                      cats: local.household?.cats || 1,
+                      housing: local.household?.housing || 'apartment',
+                      box_type: local.household?.box_type || '',
+                      allergy: Boolean(local.household?.allergy),
+                    });
+                  }
+                  writeLocalState((prev) => ({
+                    ...prev,
+                    loggedIn: true,
+                    household: {
+                      ...prev.household,
+                      id: hhId,
+                      email: cleanEmail,
+                      display_name: displayName,
+                    },
+                  }));
+                  setMsg('已成功登入並同步至雲端貓窩。');
+                }}
+              >
+                登入／建立我的貓窩
+              </button>
+
+              {isIoTDevMode && (
+                <button
+                  className="ghost"
+                  onClick={() => {
                     writeLocalState((prev) => ({
                       ...prev,
                       loggedIn: true,
                       household: {
                         ...prev.household,
-                        email: email.trim() || 'catlover@example.com',
-                        display_name: prev.household.display_name || email.split('@')[0] || '匿名貓奴',
+                        id: ensureUuid(prev.household.id),
+                        email: 'bruce30709@gmail.com',
+                        display_name: '雙喵實測家 Bruce',
                       },
                     }));
-                    setMsg('已成功登入。');
-                    return;
-                  }
-                  const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: `${location.origin}/me` } });
-                  setMsg(error ? error.message : '登入連結已寄出，請到信箱點開。');
-                }}
-              >
-                使用此信箱登入／註冊
-              </button>
-
-              {isLocalMode && (
-                <button
-                  className="ghost"
-                  onClick={() => {
-                    writeLocalState((prev) => ({ ...prev, loggedIn: true }));
                   }}
                 >
-                  一鍵快速體驗登入（雙喵實測家 Bruce）
+                  一鍵快速體驗登入（開發測試用）
                 </button>
               )}
             </div>
@@ -106,49 +140,58 @@ export default function Me() {
   }
 
   async function saveHousehold() {
+    const hhId = ensureUuid(household?.id);
     const row = { ...h, display_name: h.display_name.trim() || '匿名貓奴' };
-    if (isLocalMode || !db) {
-      writeLocalState((prev) => ({
-        ...prev,
-        household: { ...prev.household, ...row },
-      }));
-      setH(row);
-      setMsg('家庭情境已儲存，排行榜與實測將自動帶入此設定。');
-      return;
+    if (db) {
+      await db.from('households').upsert({ id: hhId, email: household?.email || null, ...row });
     }
-    const { error } = await db.from('households').upsert({ ...row, ...(household ? { id: household.id } : {}) });
-    if (!error) setH(row);
-    setMsg(error ? error.message : '已儲存。');
+    writeLocalState((prev) => ({
+      ...prev,
+      household: { ...prev.household, id: hhId, ...row },
+    }));
+    setH(row);
+    setMsg('家庭情境已儲存並同步至 Supabase 雲端資料庫！');
     reload();
   }
 
   async function addCat() {
     if (!cat.name.trim()) return setMsg('請先輸入貓咪名字。');
+    const hhId = ensureUuid(household?.id);
+    const catId = ensureUuid(null);
     const newCat: CatProfile = {
-      id: `cat-${Date.now()}`,
+      id: catId,
       name: cat.name.trim(),
       birth_date: cat.birth_date || null,
       long_hair: cat.long_hair,
       neutered: cat.neutered,
       vet_tags: cat.vet_tag ? [cat.vet_tag] : [],
     };
-    if (isLocalMode || !db) {
-      writeLocalState((prev) => ({
-        ...prev,
-        cats: [...prev.cats, newCat],
-        household: { ...prev.household, cats: Math.max(prev.household.cats, prev.cats.length + 1) },
-      }));
-      setCat({ name: '', birth_date: '', long_hair: false, neutered: true, vet_tag: '' });
-      setMsg(`已新增貓咪「${newCat.name}」。`);
-      return;
+    if (db) {
+      await db.from('households').upsert({
+        id: hhId,
+        display_name: household?.display_name || '匿名貓奴',
+        cats: Math.max(h.cats, cats.length + 1),
+        housing: h.housing,
+        box_type: h.box_type,
+        allergy: h.allergy,
+      });
+      await db.from('cats').upsert({
+        id: catId,
+        household_id: hhId,
+        name: newCat.name,
+        birth_date: newCat.birth_date,
+        long_hair: newCat.long_hair,
+        neutered: newCat.neutered,
+        vet_tags: newCat.vet_tags,
+      });
     }
-    if (!household) return;
-    const { data, error } = await db.from('cats').insert({
-      household_id: household.id, name: newCat.name, birth_date: newCat.birth_date, long_hair: newCat.long_hair, neutered: newCat.neutered, vet_tags: newCat.vet_tags,
-    }).select().single();
-    if (error) return setMsg(error.message);
-    setCats([...cats, data as CatProfile]);
+    writeLocalState((prev) => ({
+      ...prev,
+      cats: [...prev.cats, newCat],
+      household: { ...prev.household, id: hhId, cats: Math.max(prev.household.cats, prev.cats.length + 1) },
+    }));
     setCat({ name: '', birth_date: '', long_hair: false, neutered: true, vet_tag: '' });
+    setMsg(`已新增貓咪「${newCat.name}」並同步至雲端。`);
   }
 
   function removeCat(id: string) {
@@ -290,9 +333,9 @@ export default function Me() {
 
       <div className="grid2">
         <section className="card">
-          <h3>實測官信譽等級 ＆ 二階段硬體早鳥資格</h3>
+          <h3>{isIoTDevMode ? '實測官信譽等級 ＆ 二階段硬體早鳥資格' : '實測官信譽等級 ＆ 演算法權重說明'}</h3>
           <p className="small muted">
-            第一階段為保持 100% 獨立中立，我們<b>不向廠商索取業配試用包</b>。你的實測貢獻值（EXP）用來解鎖平台信譽權重與第二階段硬體內測資格：
+            為保持 100% 獨立中立，你的實測貢獻值（EXP）只看實測完整度、不隨給分高低變動，並用來解鎖排行榜演算法權重：
           </p>
           <div className="form">
             <div className="reward-row">
@@ -313,16 +356,18 @@ export default function Me() {
             </div>
             <div className="reward-row">
               <div>
-                <b>Lv.3 創始評鑑官（200+ EXP）· 二階段硬體種子資格</b>
+                <b>{isIoTDevMode ? 'Lv.3 創始評鑑官（200+ EXP）· 二階段硬體種子資格' : 'Lv.3 殿堂評鑑官（200+ EXP）'}</b>
                 <div className="small muted">
-                  優先獲得第二階段「免換盆 · 加裝式砂盆＆飲水智慧貼片」首批半價／免費內測資格，以及未來官方盲測盒候補權
+                  {isIoTDevMode
+                    ? '優先獲得第二階段「免換盆 · 加裝式砂盆＆飲水智慧貼片」首批內測資格，以及未來無印盲測盒候補權'
+                    : '累積 2 款以上第 30 天長期追蹤實測，享有社群精選置頂與無印盲測體驗優先候補資格'}
                 </div>
               </div>
               <button
                 className="ghost small-btn"
                 onClick={() => {
                   setWaitlistJoined(true);
-                  setMsg('已將您排入第二階段「加裝式智慧貼片」種子內測名單。您也可以點選上方導覽列「二階段：感測貼片」預覽功能。');
+                  setMsg(isIoTDevMode ? '已將您排入第二階段「加裝式智慧貼片」種子內測名單。' : '已將您排入殿堂評鑑官優先候補名單。');
                 }}
               >
                 {waitlistJoined ? '已排入候補' : '登記候補'}

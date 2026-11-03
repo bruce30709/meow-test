@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useHousehold, writeLocalState } from '@/components/useHousehold';
+import { useHousehold, writeLocalState, ensureUuid, isIoTDevMode } from '@/components/useHousehold';
 import { SAMPLE_PRODUCTS } from '@/lib/sample';
 import { ReceiptIcon, VerifiedIcon } from '@/components/Icons';
 import type { Product } from '@/lib/types';
@@ -153,6 +153,30 @@ export default function Purchase() {
     const prod = products.find((p) => p.id === form.product_id);
     const prodName = prod ? `${prod.brand} ${prod.name}` : form.product_id;
 
+    if (db) {
+      const hhId = ensureUuid(household.id);
+      await db.from('households').upsert({
+        id: hhId,
+        email: household.email || null,
+        display_name: household.display_name || '認證飼主',
+        cats: household.cats || 1,
+        housing: household.housing || 'apartment',
+        box_type: household.box_type || '',
+        allergy: Boolean(household.allergy),
+      });
+      await db.from('purchases').insert({
+        household_id: hhId,
+        product_id: form.product_id,
+        purchased_at: form.purchased_at,
+        quantity: Number(form.quantity) || 1,
+        price_twd: price,
+        channel: form.channel || '網購通路',
+        proof_path: proofPath,
+        verified: Boolean(proofPath),
+        full_replace: form.full_replace,
+      });
+    }
+
     if (isLocalMode || !db || !session) {
       const verified = Boolean(proofPath);
       const prevSame = local.purchases.filter((x) => x.product_id === form.product_id && x.verified && x.purchased_at !== form.purchased_at);
@@ -259,21 +283,25 @@ export default function Purchase() {
       </section>
 
       <section className="card form">
-        <h3>快速測試：一鍵載入真實電商訂單截圖（模擬 Gemini OCR 辨識）</h3>
-        <p className="small muted" style={{ margin: 0 }}>
-          手邊沒截圖？直接點下方任一按鈕，體驗 AI 自動從雜亂的賣場標題對齊標準商品 ID 與金額：
-        </p>
-        <div className="row" style={{ gap: 8 }}>
-          {DEMO_RECEIPTS.map((d, i) => (
-            <button key={i} type="button" className="ghost small-btn" onClick={() => loadDemoReceipt(d)}>
-              {d.label}
-            </button>
-          ))}
-        </div>
+        {isIoTDevMode && (
+          <>
+            <h3>快速測試：一鍵載入真實電商訂單截圖（開發測試用）</h3>
+            <p className="small muted" style={{ margin: 0 }}>
+              開發測試模式：點下方按鈕測試 AI 自動從賣場標題對齊標準商品 ID 與金額：
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              {DEMO_RECEIPTS.map((d, i) => (
+                <button key={i} type="button" className="ghost small-btn" onClick={() => loadDemoReceipt(d)}>
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <label htmlFor="proof" className="upload-dropzone">
-          <b>或從電腦選擇你的訂單截圖／發票照片上傳</b>
-          <span className="small muted">支援 JPG / PNG 截圖，私人加密 Bucket 儲存</span>
+          <b>選擇你的訂單截圖／發票照片上傳</b>
+          <span className="small muted">支援 momo、蝦皮、酷澎、好市多或寵物店 JPG / PNG 截圖</span>
           <input id="proof" type="file" accept="image/*" disabled={busy} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
         </label>
 

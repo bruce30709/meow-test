@@ -1,42 +1,77 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useHousehold, writeLocalState } from '@/components/useHousehold';
+import { useHousehold, writeLocalState, ensureUuid } from '@/components/useHousehold';
 import { needsVet, VET_MESSAGE } from '@/lib/guard';
 import type { Question } from '@/lib/types';
 
 export default function QA({ productId, initial }: { productId: string; initial: Question[] }) {
-  const { db, isLocalMode, household, local } = useHousehold();
+  const { db, household, local } = useHousehold();
   const [serverQuestions, setServerQuestions] = useState(initial);
   const [text, setText] = useState('');
   const [replies, setReplies] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState('');
   const alert = needsVet(text) || Object.values(replies).some(needsVet);
 
+  useEffect(() => {
+    if (!db) return;
+    db.from('questions')
+      .select('id,product_id,author_name,body,created_at,answers(id,author_name,body,created_at)')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setServerQuestions((prev) => {
+            const seen = new Set(data.map((q) => q.id));
+            return [...(data as unknown as Question[]), ...prev.filter((p) => !seen.has(p.id))];
+          });
+        }
+      });
+  }, [db, productId]);
+
   const localQuestions = local.questions.filter((q) => q.product_id === productId);
-  const questions = [...localQuestions, ...serverQuestions];
+  const seenBody = new Set<string>();
+  const questions = [...serverQuestions, ...localQuestions].filter((q) => {
+    if (seenBody.has(q.body)) return false;
+    seenBody.add(q.body);
+    return true;
+  });
 
   async function ask() {
     if (!household || needsVet(text) || text.trim().length < 2) return;
     const today = new Date().toISOString().slice(0, 10);
-    if (isLocalMode || !db) {
-      const q: Question = {
-        id: `lq-${Date.now()}`,
-        product_id: productId,
-        author_name: household.display_name,
-        body: text.trim(),
-        created_at: today,
-        answers: [],
-      };
-      writeLocalState((prev) => ({ ...prev, questions: [q, ...prev.questions] }));
-      setText('');
-      return;
+    const hhId = ensureUuid(household.id);
+    if (db) {
+      await db.from('households').upsert({
+        id: hhId,
+        email: household.email || null,
+        display_name: household.display_name || '認證飼主',
+        cats: household.cats || 1,
+        housing: household.housing || 'apartment',
+        box_type: household.box_type || '',
+        allergy: Boolean(household.allergy),
+      });
+      const { data } = await db
+        .from('questions')
+        .insert({ product_id: productId, household_id: hhId, author_name: household.display_name, body: text.trim() })
+        .select()
+        .single();
+      if (data) {
+        setServerQuestions([{ ...(data as Question), answers: [] }, ...serverQuestions]);
+        setText('');
+        return;
+      }
     }
-    const { data, error } = await db.from('questions')
-      .insert({ product_id: productId, household_id: household.id, author_name: household.display_name, body: text })
-      .select().single();
-    if (error) return setMsg(error.message);
-    setServerQuestions([{ ...(data as Question), answers: [] }, ...serverQuestions]);
+    const q: Question = {
+      id: `lq-${Date.now()}`,
+      product_id: productId,
+      author_name: household.display_name,
+      body: text.trim(),
+      created_at: today,
+      answers: [],
+    };
+    writeLocalState((prev) => ({ ...prev, questions: [q, ...prev.questions] }));
     setText('');
   }
 
@@ -44,25 +79,41 @@ export default function QA({ productId, initial }: { productId: string; initial:
     const body = replies[qid]?.trim();
     if (!household || !body || needsVet(body)) return;
     const today = new Date().toISOString().slice(0, 10);
+    const hhId = ensureUuid(household.id);
     const newAns = { id: `la-${Date.now()}`, author_name: household.display_name, body, created_at: today };
 
-    if (isLocalMode || !db) {
-      if (qid.startsWith('lq-')) {
-        writeLocalState((prev) => ({
-          ...prev,
-          questions: prev.questions.map((q) => (q.id === qid ? { ...q, answers: [...q.answers, newAns] } : q)),
-        }));
-      } else {
-        setServerQuestions(serverQuestions.map((q) => (q.id === qid ? { ...q, answers: [...q.answers, newAns] } : q)));
+    if (db && !qid.startsWith('lq-') && !qid.startsWith('q-')) {
+      await db.from('households').upsert({
+        id: hhId,
+        email: household.email || null,
+        display_name: household.display_name || '認證飼主',
+        cats: household.cats || 1,
+        housing: household.housing || 'apartment',
+        box_type: household.box_type || '',
+        allergy: Boolean(household.allergy),
+      });
+      const { data } = await db
+        .from('answers')
+        .insert({ question_id: qid, household_id: hhId, author_name: household.display_name, body })
+        .select()
+        .single();
+      if (data) {
+        setServerQuestions(
+          serverQuestions.map((q) => (q.id === qid ? { ...q, answers: [...q.answers, data as Question['answers'][number]] } : q)),
+        );
+        setReplies({ ...replies, [qid]: '' });
+        return;
       }
-      setReplies({ ...replies, [qid]: '' });
-      return;
     }
-    const { data, error } = await db.from('answers')
-      .insert({ question_id: qid, household_id: household.id, author_name: household.display_name, body })
-      .select().single();
-    if (error) return setMsg(error.message);
-    setServerQuestions(serverQuestions.map((q) => (q.id === qid ? { ...q, answers: [...q.answers, data as Question['answers'][number]] } : q)));
+
+    if (qid.startsWith('lq-')) {
+      writeLocalState((prev) => ({
+        ...prev,
+        questions: prev.questions.map((q) => (q.id === qid ? { ...q, answers: [...q.answers, newAns] } : q)),
+      }));
+    } else {
+      setServerQuestions(serverQuestions.map((q) => (q.id === qid ? { ...q, answers: [...q.answers, newAns] } : q)));
+    }
     setReplies({ ...replies, [qid]: '' });
   }
 

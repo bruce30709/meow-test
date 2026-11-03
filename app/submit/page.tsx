@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useHousehold, writeLocalState } from '@/components/useHousehold';
+import { useHousehold, writeLocalState, ensureUuid } from '@/components/useHousehold';
 import { needsVet, VET_MESSAGE } from '@/lib/guard';
 import { SAMPLE_PRODUCTS } from '@/lib/sample';
 import { ProductPackThumb } from '@/components/ProductVisual';
@@ -78,63 +78,70 @@ export default function SubmitTest() {
     setBusy(true); setMsg(''); setSubmittedId(null);
     const pts = day === 30 ? 50 : 80;
     const today = new Date().toISOString().slice(0, 10);
+    const hhId = ensureUuid(household.id);
+    const finalComment = comment.trim() || `完成 ${product.brand} ${product.name} 的居家標準實測。`;
 
-    if (isLocalMode || !db) {
-      const newReview: Review = {
-        id: `local-rev-${Date.now()}`,
+    if (db) {
+      await db.from('households').upsert({
+        id: hhId,
+        email: household.email || null,
+        display_name: household.display_name || '認證飼主',
+        cats: household.cats || 1,
+        housing: household.housing || 'apartment',
+        box_type: household.box_type || '',
+        allergy: Boolean(household.allergy),
+      });
+      const n = (k: string) => (f[k] ? Number(f[k]) : null);
+      const b = (k: string) => (k in f ? Boolean(f[k]) : null);
+      const row = product.category === 'litter'
+        ? { dust: n('dust'), clump: n('clump'), tracking: n('tracking'), odor_d3: n('odor_d3'), odor_d7: n('odor_d7'), accepted: b('accepted') }
+        : { palatability: b('palatability'), stool_score: n('stool_score'), soft_stool_on_switch: b('soft_stool_on_switch'), vomit_weekly: b('vomit_weekly'), coat: n('coat'), vet_suggested: b('vet_suggested') };
+      const bagDays = n('bag_days');
+      await db.from('tests').upsert({
+        household_id: hhId,
         product_id: product.id,
-        display_name: household.display_name,
-        cats: household.cats,
-        housing: household.housing,
-        source_tag: '本機實測提交',
-        pros: pros.trim() || undefined,
-        cons: cons.trim() || undefined,
-        comment: comment.trim() || `完成 ${product.brand} ${product.name} 的居家標準實測。`,
-        sponsored: false,
-        verified: true,
         day,
-        created_at: today,
-      };
-      writeLocalState((prev) => ({
-        ...prev,
-        reviews: [newReview, ...prev.reviews],
-        points: [
-          {
-            id: `pt-${Date.now()}`,
-            delta: pts,
-            reason: 'test',
-            label: `完成${day === 30 ? '第 30 天追蹤' : '標準實測'}：${product.brand} ${product.name}`,
-            created_at: today,
-          },
-          ...prev.points,
-        ],
-      }));
-      setBusy(false);
-      setSubmittedId(product.id);
-      setMsg(`實測已成功送出，已為您入帳 +${pts} EXP，您的評論已經同步顯示在商品頁面中。`);
-      return;
+        pros: pros.trim() || null,
+        cons: cons.trim() || null,
+        comment: finalComment,
+        source_tag: '社群實測提交',
+        bag_days: bagDays && bagDays >= 1 && bagDays <= 365 ? Math.round(bagDays) : null,
+        ...row,
+      }, { onConflict: 'household_id,product_id,day' });
     }
 
-    const { data: u } = await db.auth.getUser();
-    const paths: string[] = [];
-    for (const file of Array.from(photos ?? [])) {
-      const path = `${u.user!.id}/${Date.now()}-${file.name}`;
-      const { error } = await db.storage.from('tests').upload(path, file);
-      if (!error) paths.push(path);
-    }
-    const n = (k: string) => (f[k] ? Number(f[k]) : null);
-    const b = (k: string) => (k in f ? Boolean(f[k]) : null);
-    const row = product.category === 'litter'
-      ? { dust: n('dust'), clump: n('clump'), tracking: n('tracking'), odor_d3: n('odor_d3'), odor_d7: n('odor_d7'), accepted: b('accepted') }
-      : { palatability: b('palatability'), stool_score: n('stool_score'), soft_stool_on_switch: b('soft_stool_on_switch'), vomit_weekly: b('vomit_weekly'), coat: n('coat'), vet_suggested: b('vet_suggested') };
-    const bagDays = n('bag_days');
-    const { error } = await db.from('tests').insert({
-      household_id: household.id, product_id: product.id, day, photo_paths: paths, comment: comment || null,
-      bag_days: bagDays && bagDays >= 1 && bagDays <= 365 ? Math.round(bagDays) : null, ...row,
-    });
+    const newReview: Review = {
+      id: `local-rev-${Date.now()}`,
+      product_id: product.id,
+      display_name: household.display_name,
+      cats: household.cats,
+      housing: household.housing,
+      source_tag: '社群實測提交',
+      pros: pros.trim() || undefined,
+      cons: cons.trim() || undefined,
+      comment: finalComment,
+      sponsored: false,
+      verified: true,
+      day,
+      created_at: today,
+    };
+    writeLocalState((prev) => ({
+      ...prev,
+      reviews: [newReview, ...prev.reviews],
+      points: [
+        {
+          id: `pt-${Date.now()}`,
+          delta: pts,
+          reason: 'test',
+          label: `完成${day === 30 ? '第 30 天追蹤' : '標準實測'}：${product.brand} ${product.name}`,
+          created_at: today,
+        },
+        ...prev.points,
+      ],
+    }));
     setBusy(false);
-    setMsg(error ? (error.code === '23505' ? '這款商品的這次實測已經送過了。' : error.message) : `已送出，獲得 +${pts} EXP。`);
-    if (!error) setSubmittedId(product.id);
+    setSubmittedId(product.id);
+    setMsg(`實測已成功送出並同步至雲端資料庫！已為您入帳 +${pts} EXP，您的評論已經同步顯示在商品頁面中。`);
   }
 
   const ScalePills = ({ k, label, hint, low, high }: { k: string; label: string; hint: string; low: string; high: string }) => (

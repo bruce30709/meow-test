@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { HOUSING_LABEL, type Review } from '@/lib/types';
 import { useHousehold } from '@/components/useHousehold';
@@ -6,9 +7,29 @@ import { ReviewPhotoCard } from '@/components/ProductVisual';
 import { VerifiedIcon, PlusCircleIcon, InfoCircleIcon } from '@/components/Icons';
 
 export default function ReviewsSection({ productId, initial }: { productId: string; initial: Review[] }) {
-  const { local, isLocalMode } = useHousehold();
-  const userReviews = isLocalMode ? local.reviews.filter((r) => r.product_id === productId) : [];
-  const allReviews = [...userReviews, ...initial];
+  const { db, local } = useHousehold();
+  const [liveReviews, setLiveReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    if (!db) return;
+    db.from('public_reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        if (data && data.length > 0) setLiveReviews(data as Review[]);
+      });
+  }, [db, productId]);
+
+  const userReviews = local.reviews.filter((r) => r.product_id === productId);
+  const seenKey = new Set<string>();
+  const allReviews = [...liveReviews, ...userReviews, ...initial].filter((r) => {
+    const key = `${r.display_name || ''}:${(r.comment || '').slice(0, 30)}`;
+    if (seenKey.has(key)) return false;
+    seenKey.add(key);
+    return true;
+  });
 
   const allPhotos = allReviews.flatMap((r) => r.photos ?? []);
 
