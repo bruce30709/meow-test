@@ -109,9 +109,10 @@ export function useHousehold() {
   const [loading, setLoading] = useState(true);
 
   async function reload() {
+    const st = readLocalState();
+    setLocal(st);
+
     if (!db) {
-      const st = readLocalState();
-      setLocal(st);
       setHousehold(st.loggedIn ? st.household : null);
       setLoading(false);
       return;
@@ -120,26 +121,36 @@ export function useHousehold() {
     setSession(data.session);
     if (data.session) {
       const { data: h } = await db.from('households').select('*').maybeSingle();
-      setHousehold(h as Household | null);
+      if (h) {
+        setHousehold(h as Household);
+      } else {
+        setHousehold({
+          id: data.session.user.id,
+          email: data.session.user.email,
+          display_name: data.session.user.email?.split('@')[0] || '認證飼主',
+          cats: 1,
+          housing: 'apartment',
+          box_type: '',
+          allergy: false,
+        });
+      }
     } else {
-      setHousehold(null);
+      setHousehold(st.loggedIn ? st.household : null);
     }
     setLoading(false);
   }
 
   useEffect(() => {
     reload();
-    if (!db) {
-      const onUpdate = () => reload();
-      window.addEventListener(EVENT_NAME, onUpdate);
-      window.addEventListener('storage', onUpdate);
-      return () => {
-        window.removeEventListener(EVENT_NAME, onUpdate);
-        window.removeEventListener('storage', onUpdate);
-      };
-    }
-    const { data } = db.auth.onAuthStateChange(() => { reload(); });
-    return () => data.subscription.unsubscribe();
+    const onUpdate = () => reload();
+    window.addEventListener(EVENT_NAME, onUpdate);
+    window.addEventListener('storage', onUpdate);
+    const sub = db ? db.auth.onAuthStateChange(() => { reload(); }).data.subscription : null;
+    return () => {
+      window.removeEventListener(EVENT_NAME, onUpdate);
+      window.removeEventListener('storage', onUpdate);
+      sub?.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -147,7 +158,7 @@ export function useHousehold() {
 
   return {
     db,
-    isLocalMode: !db,
+    isLocalMode: !db || !session,
     session,
     household,
     local,
