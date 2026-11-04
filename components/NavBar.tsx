@@ -6,7 +6,7 @@ import { CatLogoIcon } from './Icons';
 
 const USER_NAV_ITEMS = [
   { href: '/', label: '排行榜' },
-  { href: '/calc', label: '每日成本試算' },
+  { href: '/calc', label: '成本試算' },
   { href: '/submit', label: '提交實測' },
   { href: '/purchase', label: '訂單驗證' },
   { href: '/method', label: '評分方法' },
@@ -14,7 +14,7 @@ const USER_NAV_ITEMS = [
 
 const UAT_NAV_ITEMS = [
   { href: '/', label: '排行榜' },
-  { href: '/calc', label: '每日成本試算' },
+  { href: '/calc', label: '成本試算' },
   { href: '/submit', label: '提交實測' },
   { href: '/purchase', label: '訂單驗證' },
   { href: '/method', label: '評分方法' },
@@ -53,9 +53,9 @@ export default function NavBar() {
                 fontSize: '0.72rem',
               }}
             >
-              UAT 測試環境
+              UAT 驗收模式
             </span>
-            <span>供開發與驗收測試使用（包含一鍵測試資料與快速切換身分視角）</span>
+            <span>測試環境</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
@@ -88,7 +88,7 @@ export default function NavBar() {
                 }
               }}
             >
-              {household ? '切換為：未登入訪客視角' : '一鍵切換：測試會員 (Bruce)'}
+              {household ? '切換：訪客視角' : '切換：測試會員'}
             </button>
             <a
               href="https://meow-test-5fg.pages.dev"

@@ -29,8 +29,24 @@ export default async function ProductPage({ params }: { params: { id: string } }
   return (
     <main>
       <div className="breadcrumb">
-        <Link href={`/?cat=${product.category}`}>← 返回{product.category === 'litter' ? '貓砂' : '貓飼料'}排行榜</Link>
+        <Link href="/">← 返回貓砂排行榜</Link>
       </div>
+
+      {product.category === 'food' && (
+        <div
+          style={{
+            background: '#FFF9F6',
+            border: '1px solid #F4DDD5',
+            padding: '10px 16px',
+            borderRadius: 14,
+            fontSize: '0.82rem',
+            color: '#8A5A52',
+            marginBottom: 16,
+          }}
+        >
+          【公告】飼料評比與導購目前暫停開放（待第三方檢驗認證接洽中），本站現專注於無醫療爭議之貓砂客觀盲測。
+        </div>
+      )}
 
       <section className="product-hero card">
         <div className="product-hero-top">

@@ -1048,3 +1048,181 @@ button:disabled { opacity: 0.5; cursor: default; }
 table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+
+/* ================= 30 秒貓砂智慧推薦精靈 ================= */
+.recommender-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFBF9 100%);
+  border: 1.5px solid #F3DFD8;
+  border-radius: 28px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 20px rgba(232, 111, 104, 0.08);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.recommender-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(232, 111, 104, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.recommender-header {
+  margin-bottom: 16px;
+}
+.quiz-progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.quiz-progress-track {
+  flex: 1;
+  height: 6px;
+  background: #F3ECE5;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #E86F68 0%, #FA897B 100%);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.quiz-progress-text {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.quiz-step {
+  animation: fadeIn 0.25s ease-out;
+}
+.quiz-question {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.quiz-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.quiz-opt-btn {
+  background: #FFFFFF;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 16px 18px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+.quiz-opt-btn:hover {
+  border-color: #E86F68;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(232, 111, 104, 0.12);
+  background: #FFFDFC;
+}
+.quiz-opt-btn.on {
+  border-color: #E86F68;
+  background: #FFF5F4;
+}
+.quiz-opt-btn b {
+  font-size: 0.94rem;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.quiz-opt-btn span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.quiz-back {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  margin-top: 4px;
+  border-radius: 8px;
+  transition: color 0.15s;
+}
+.quiz-back:hover {
+  color: var(--accent);
+}
+
+/* 推薦結果展示 */
+.quiz-result-view {
+  animation: fadeIn 0.3s ease-out;
+}
+.quiz-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--line);
+}
+.quiz-result-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+.quiz-result-item {
+  background: #FFFFFF;
+  border: 1.5px solid #F3DFD8;
+  border-radius: 22px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(232, 111, 104, 0.08);
+  position: relative;
+}
+.match-percent {
+  font-family: var(--f-data);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0D9488;
+  background: #E6FFFA;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid #99F6E4;
+}
+.price-badge {
+  font-family: var(--f-data);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.quiz-result-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.quiz-reason {
+  font-size: 0.82rem;
+  color: #4A3E3E;
+  margin: 6px 0 0;
+  line-height: 1.5;
+  background: #FFF9F7;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border-left: 3px solid #E86F68;
+}
+.quiz-result-footer {
+  margin-top: auto;
+}
