@@ -333,7 +333,7 @@ export default function Me() {
 
       <div className="grid2">
         <section className="card">
-          <h3>{isIoTDevMode ? '實測官信譽等級 ＆ 二階段硬體早鳥資格' : '實測官信譽等級 ＆ 演算法權重說明'}</h3>
+          <h3>實測官信譽等級 ＆ 演算法權重說明</h3>
           <p className="small muted">
             為保持 100% 獨立中立，你的實測貢獻值（EXP）只看實測完整度、不隨給分高低變動，並用來解鎖排行榜演算法權重：
           </p>
@@ -356,18 +356,16 @@ export default function Me() {
             </div>
             <div className="reward-row">
               <div>
-                <b>{isIoTDevMode ? 'Lv.3 創始評鑑官（200+ EXP）· 二階段硬體種子資格' : 'Lv.3 殿堂評鑑官（200+ EXP）'}</b>
+                <b>Lv.3 殿堂評鑑官（200+ EXP）</b>
                 <div className="small muted">
-                  {isIoTDevMode
-                    ? '優先獲得第二階段「免換盆 · 加裝式砂盆＆飲水智慧貼片」首批內測資格，以及未來無印盲測盒候補權'
-                    : '累積 2 款以上第 30 天長期追蹤實測，享有社群精選置頂與無印盲測體驗優先候補資格'}
+                  累積 2 款以上第 30 天長期追蹤實測，享有社群精選置頂與無印盲測體驗優先候補資格
                 </div>
               </div>
               <button
                 className="ghost small-btn"
                 onClick={() => {
                   setWaitlistJoined(true);
-                  setMsg(isIoTDevMode ? '已將您排入第二階段「加裝式智慧貼片」種子內測名單。' : '已將您排入殿堂評鑑官優先候補名單。');
+                  setMsg('已將您排入殿堂評鑑官優先候補名單。');
                 }}
               >
                 {waitlistJoined ? '已排入候補' : '登記候補'}

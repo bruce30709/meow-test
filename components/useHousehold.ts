@@ -52,9 +52,9 @@ type LocalState = {
   questions: Question[];
 };
 
-export const isIoTDevMode = process.env.NEXT_PUBLIC_APP_MODE === 'iot';
+export const isIoTDevMode = process.env.NEXT_PUBLIC_APP_MODE === 'uat' || process.env.NEXT_PUBLIC_APP_MODE === 'iot';
 
-const STORAGE_KEY = isIoTDevMode ? 'meow_test_iot_dev_v3' : 'meow_test_user_v3';
+const STORAGE_KEY = isIoTDevMode ? 'meow_test_uat_v3' : 'meow_test_user_v3';
 const EVENT_NAME = 'meow-local-update';
 
 const DEFAULT_UUID = '22222222-2222-4222-8222-222222222201';

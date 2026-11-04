@@ -8,7 +8,7 @@ import { HOUSING_LABEL, type Category, type Housing, type Product, type Ranked }
 import { browser } from '@/lib/supabase';
 import Disclaimer from '@/components/Disclaimer';
 import { ProductPackThumb } from '@/components/ProductVisual';
-import { BowlIcon, LitterIcon, CalcIcon, SensorIcon, VerifiedIcon, ArrowUpRightIcon } from '@/components/Icons';
+import { BowlIcon, LitterIcon, CalcIcon, EditIcon, VerifiedIcon, ArrowUpRightIcon } from '@/components/Icons';
 
 const SORTS: Record<Category, [SortKey, string][]> = {
   food: [['score', '綜合評分'], ['repurchase', '真實回購率'], ['cost', '每日成本最低']],
@@ -167,11 +167,11 @@ function LeaderboardContent() {
             <p className="small muted">輸入包裝價格與使用天數，30 秒算出每日真實開銷並與全站中位數對比</p>
           </div>
         </Link>
-        <Link href="/iot" className="cta-card">
-          <span className="cta-icon"><SensorIcon size={22} /></span>
+        <Link href="/submit" className="cta-card">
+          <span className="cta-icon"><EditIcon size={22} /></span>
           <div>
-            <b>第二階段預覽：加裝式「砂盆＆飲水」感測貼片</b>
-            <p className="small muted">免換砂盆一貼即用，公貓尿閉 LINE 即時推播，硬體客觀數據自動回傳排行榜</p>
+            <b>提交居家標準實測（累積信譽權重）</b>
+            <p className="small muted">3 分鐘填寫適口性、便便形狀、黑紙粉塵與除臭力，共同建立真實無業配資料庫</p>
           </div>
         </Link>
       </div>
