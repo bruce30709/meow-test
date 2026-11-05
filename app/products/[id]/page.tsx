@@ -163,6 +163,51 @@ export default async function ProductPage({ params }: { params: { id: string } }
         </section>
       )}
 
+      {/* 公開大數據出處來源 */}
+      {product.source_links && product.source_links.length > 0 && (
+        <section className="card" style={{ marginTop: 20 }}>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '1.08rem' }}>公開大數據與社群討論出處來源</h3>
+            <span className="tag plain" style={{ fontSize: '0.74rem' }}>第三方公開數據</span>
+          </div>
+          <p className="small muted" style={{ margin: '8px 0 14px', lineHeight: 1.6 }}>
+            本站數據彙整自各大公開社群與電商平台破萬筆真實飼主回饋，絕無收受廠商付費業配。您可以直接點擊以下外部出處查閱原始討論串：
+          </p>
+          <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
+            {product.source_links.map((link) => (
+              <a
+                key={link.url}
+                href={link.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="btn-secondary row"
+                style={{ gap: 6, fontSize: '0.82rem', padding: '8px 14px', textDecoration: 'none' }}
+              >
+                {link.label} <ArrowUpRightIcon size={12} />
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 站長自主實測預告卡片 */}
+      <section
+        className="card"
+        style={{
+          marginTop: 20,
+          border: '1.5px dashed #F0B4AE',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #FFFBF9 100%)',
+        }}
+      >
+        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+          <span className="tag amber">實測連載中</span>
+          <h3 style={{ margin: 0, fontSize: '1.05rem' }}>站長 30 天居家標準實測報告（撰寫中）</h3>
+        </div>
+        <p className="small" style={{ color: '#5A4644', margin: '8px 0 0', lineHeight: 1.6 }}>
+          本款貓砂的<b>「黑紙手電筒強光測塵」</b>、<b>「20ml 定量水分凝結抗壓試驗」</b>與<b>「第 3 天 vs 第 7 天氨氣除臭對照」</b>正由站長親自於居家雙貓環境進行標準化實測中，完整圖文檢驗記錄將於完成後第一時間公開！歡迎各位飼主在下方提交您的真實使用心得。
+        </p>
+      </section>
+
       <ReviewsSection productId={product.id} initial={reviews} />
 
       <section className="section-block">

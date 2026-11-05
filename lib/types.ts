@@ -18,6 +18,7 @@ export type Product = {
   life_stage?: string | null;
   prescription: boolean;
   buy_url?: string | null;
+  source_links?: { label: string; url: string }[];
   is_sample?: boolean;
 };
 

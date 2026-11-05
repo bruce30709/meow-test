@@ -290,7 +290,7 @@ export default function LitterRecommender({ litters }: { litters: Ranked[] }) {
                         除臭 <b>{item.product.odor_b?.toFixed(1) ?? '4.8'} / 5</b>
                       </span>
                       <span className="cute-pill">
-                        低粉塵 <b>{item.product.dust_b?.toFixed(1) ?? '4.8'} / 5</b>
+                        低粉塵 <b>{item.product.dust_b != null ? (6 - item.product.dust_b).toFixed(1) : '4.8'} / 5</b>
                       </span>
                     </div>
                   </div>

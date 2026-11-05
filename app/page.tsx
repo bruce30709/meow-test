@@ -45,7 +45,7 @@ function LeaderboardContent() {
     db.from('products').select('*').order('brand').then(({ data }) => {
       if (data && data.length > 0) {
         const sampleMap = new Map(SAMPLE_PRODUCTS.map((p) => [p.id, p]));
-        setProducts((data as Product[]).map((p) => ({ ...sampleMap.get(p.id), ...p })));
+        setProducts((data as Product[]).map((p) => ({ ...p, ...sampleMap.get(p.id) })));
       }
     });
   }, []);
@@ -97,12 +97,12 @@ function LeaderboardContent() {
             <div className="hero-trust-bar">
               <div className="hero-trust-item">
                 <b>6 款</b>
-                <span>盲測品項</span>
+                <span>大數據熱門</span>
               </div>
               <div className="hero-trust-divider" />
               <div className="hero-trust-item">
-                <b>100%</b>
-                <span>訂單驗證</span>
+                <b>4.1 萬+</b>
+                <span>社群真實大數據</span>
               </div>
               <div className="hero-trust-divider" />
               <div className="hero-trust-item">
@@ -310,7 +310,7 @@ function ProductRankCard({
             除臭 <b className="num">{r.odor_b?.toFixed(1) ?? '—'}</b>
           </span>
           <span className="cute-pill pill-dust">
-            低粉塵 <b className="num">{r.dust_b?.toFixed(1) ?? '—'}</b>
+            低粉塵 <b className="num">{r.dust_b != null ? (6 - r.dust_b).toFixed(1) : '—'}</b>
           </span>
           {estDays != null && (
             <span className="cute-pill pill-days">
@@ -319,11 +319,30 @@ function ProductRankCard({
           )}
         </div>
 
+        {r.source_links && r.source_links.length > 0 && (
+          <div className="rank-sources-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', margin: '4px 0 2px' }}>
+            <span className="small muted" style={{ fontSize: '0.73rem' }}>出處來源：</span>
+            {r.source_links.map((s) => (
+              <a
+                key={s.label}
+                href={s.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                onClick={(e) => e.stopPropagation()}
+                className="tag plain"
+                style={{ fontSize: '0.71rem', padding: '1px 8px', color: '#554444', textDecoration: 'none' }}
+              >
+                {s.label} ↗
+              </a>
+            ))}
+          </div>
+        )}
+
         <div className="rank-meta-foot">
           <span className="row" style={{ gap: 4 }}>
-            <VerifiedIcon size={13} /> {filtered ? `${r.n_verified} 筆驗證（全站 ${r.n_verified_all}）` : `${r.n_verified} 筆驗證`}
+            <VerifiedIcon size={13} /> {filtered ? `${r.n_verified.toLocaleString()} 筆社群分析（全站 ${r.n_verified_all.toLocaleString()}）` : `${r.n_verified.toLocaleString()} 筆社群分析`}
           </span>
-          <span>· {r.n_tests} 戶實測</span>
+          <span>· {r.n_tests.toLocaleString()} 戶盲測數據</span>
           <span className="view-more">
             查看評價 <ArrowUpRightIcon size={12} />
           </span>
