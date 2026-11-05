@@ -8,7 +8,6 @@ const USER_NAV_ITEMS = [
   { href: '/', label: '排行榜' },
   { href: '/calc', label: '成本試算' },
   { href: '/submit', label: '提交實測' },
-  { href: '/purchase', label: '訂單驗證' },
   { href: '/method', label: '評分方法' },
 ];
 
@@ -16,7 +15,6 @@ const UAT_NAV_ITEMS = [
   { href: '/', label: '排行榜' },
   { href: '/calc', label: '成本試算' },
   { href: '/submit', label: '提交實測' },
-  { href: '/purchase', label: '訂單驗證' },
   { href: '/method', label: '評分方法' },
 ];
 

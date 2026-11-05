@@ -66,7 +66,7 @@ export default function ReviewsSection({ productId, initial }: { productId: stri
                       <span className="tag plain">{rv.cats} 隻貓 · {housingLabel}</span>
                       {rv.verified && (
                         <span className="tag row" style={{ gap: 4 }}>
-                          <VerifiedIcon size={12} /> 已驗證購買
+                          <VerifiedIcon size={12} /> 社群真實反饋
                         </span>
                       )}
                       {rv.sponsored && <span className="tag amber">試用揭露</span>}

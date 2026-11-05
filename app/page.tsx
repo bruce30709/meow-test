@@ -91,7 +91,7 @@ function LeaderboardContent() {
             </h1>
 
             <p className="hero-desc">
-              居家實測數據 · 100% 訂單驗證 · 0 業配
+              全網社群大數據分析 · 杜絕付費業配 · 客觀公開出處
             </p>
 
             <div className="hero-trust-bar">
@@ -218,7 +218,7 @@ function LeaderboardContent() {
 
       {pending.length > 0 && (
         <section className="pending-section">
-          <h3>數據累積中（未滿 {MIN_VERIFIED} 筆購買驗證）</h3>
+          <h3>數據累積中（未滿 {MIN_VERIFIED} 筆社群回饋）</h3>
           <div className="rank-list">
             {pending.map((r) => (
               <ProductRankCard key={r.id} r={r} filtered={filtered} cats={displayCats} />

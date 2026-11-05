@@ -79,10 +79,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
         {!product.prescription && (
           <div className="product-actions">
             <Link href={`/submit?product=${product.id}`} className="btn-primary row" style={{ gap: 6 }}>
-              <EditIcon size={15} /> 提交此款實測
-            </Link>
-            <Link href={`/purchase?product=${product.id}`} className="btn-secondary row" style={{ gap: 6 }}>
-              <ReceiptIcon size={15} /> 上傳購買證明
+              <EditIcon size={15} /> 提交此款居家實測
             </Link>
             {product.buy_url && (
               <a className="btn-ghost row" style={{ gap: 6 }} href={product.buy_url} target="_blank" rel="noopener sponsored">

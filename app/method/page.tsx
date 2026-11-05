@@ -38,13 +38,13 @@ export default function Method() {
       <div className="formula">每貓每天成本 = 一包實購價格 ÷ (使用天數 × 貓數)</div>
 
       <h2>排行綜合分數（貝氏平滑）</h2>
-      <p>採用貝氏平均避免新商品少數灌票衝上第一；每位驗證飼主只算一票權重。</p>
+      <p>採用貝氏平均避免新商品少數灌票衝上第一；彙整各大社群真實評價權重。</p>
       <div className="formula">分數 = (10 × 品類平均 + Σ 權重 × 分數) ÷ (10 + Σ 權重)</div>
       <table><tbody>
         <tr><th>資料來源</th><th>權重</th></tr>
-        <tr><td>發票／電商購買證明驗證</td><td className="num">1.0</td></tr>
-        <tr><td>試用品（一律強制標示）</td><td className="num">0.5</td></tr>
-        <tr><td>無憑證回報</td><td className="num">0.4</td></tr>
+        <tr><td>全網真實社群／電商評價大數據</td><td className="num">1.0</td></tr>
+        <tr><td>飼主自主提交標準實測</td><td className="num">1.0</td></tr>
+        <tr><td>合作試用品（一律強制標示）</td><td className="num">0.5</td></tr>
       </tbody></table>
       <table><tbody>
         <tr><th>貓砂綜合評分權重</th><th>佔比</th></tr>
@@ -54,7 +54,7 @@ export default function Method() {
         <tr><td>長效除臭力</td><td className="num">15%</td></tr>
         <tr><td>貓咪接受度</td><td className="num">10%</td></tr>
       </tbody></table>
-      <p className="small muted">進榜門檻：至少累積滿 {MIN_VERIFIED} 筆發票或電商購買憑證。</p>
+      <p className="small muted">進榜門檻：至少累積滿 {MIN_VERIFIED} 筆真實社群評價反饋。本站不強迫使用者上傳發票憑證，杜絕繁瑣步驟，專注呈現最客觀大數據。</p>
 
       <h2>點數與防弊揭露</h2>
       <p>點數獎勵僅依任務完成度發放，與評分高低無關。任何合作試用品皆由系統強制加上「試用」標籤。</p>
