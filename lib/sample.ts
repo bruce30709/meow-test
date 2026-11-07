@@ -537,6 +537,78 @@ export const SAMPLE_REVIEWS: Review[] = [
     day: 30,
     created_at: '2026-10-24',
   },
+
+  // ================= 藍鑽 第二篇（PTT 貓板深度回購文） =================
+  {
+    id: 'rev-everclean-ptt',
+    product_id: 'everclean-blue',
+    display_name: 'PTT 貓板 / 老貓飼主',
+    cats: 2,
+    housing: 'apartment',
+    source_tag: 'PTT 貓板 礦砂除臭評比精華串',
+    pros: '雙重活性碳無香款最穩、不刺鼻、適合閉門開冷氣的小空間、尿塊完整不碎',
+    cons: '近年單盒價格漲到將近 700 元，荷包負擔加重、盒裝搬運重',
+    comment: '用過各家礦砂超過五年，最後還是回購藍鑽。很多人抱怨綠標太香，其實在通風不好的房間，無香白標（雙重活性碳）才是真理！尿塊完全不黏盆底，輕輕一鏟就整塊起飛。價格雖然偏貴，但我會在 momo 或好市多特價時一次囤 4 盒，平均算下來一天花費還能接受。',
+    ratings: { dust: 2, clump: 5, odor: 5 },
+    sponsored: false,
+    verified: true,
+    day: 30,
+    created_at: '2026-10-18',
+  },
+
+  // ================= 鐵鎚 第二篇（Dcard 租屋省錢分享） =================
+  {
+    id: 'rev-armhammer-dcard',
+    product_id: 'arm-hammer-slide',
+    display_name: 'Dcard 卡友 / 租屋大坪數',
+    cats: 2,
+    housing: 'apartment',
+    source_tag: 'Dcard 寵物板 好市多省錢好物分享',
+    pros: '小蘇打專利中和尿酸效果極神、顆粒偏重出盆帶砂少、便宜大碗',
+    cons: '倒到整盒最後 1/5 時粉塵會偏重，建議倒慢一點',
+    comment: '好市多經典 40 磅大黑盒真的無敵！小蘇打對付公貓濃郁的尿騷味很有感，結塊也夠硬。雖然一箱重到每次搬上二樓都懷疑人生，但看在價格只要五百多、兩隻貓可以用快兩個月的份上，CP 值真的沒話說。最後剩下的底砂建議用大孔鏟過篩一下，粉塵就不會太困擾。',
+    ratings: { dust: 3, clump: 5, odor: 4 },
+    sponsored: false,
+    verified: true,
+    day: 30,
+    created_at: '2026-10-15',
+  },
+
+  // ================= pidan 第二篇（PTT 換砂實用心得） =================
+  {
+    id: 'rev-pidan-ptt',
+    product_id: 'pidan-mixed',
+    display_name: 'PTT 貓板 / 新手換砂中',
+    cats: 1,
+    housing: 'apartment',
+    source_tag: 'PTT 貓板 混合砂使用第 30 天心得',
+    pros: '豆腐砂混 30% 礦砂解決了純豆腐砂漏尿黏底的致命缺點、貓咪接受度極高',
+    cons: '千萬不要以為有豆腐砂就沖馬桶！膨潤土遇水不溶一定會堵水管',
+    comment: '原本用純豆腐砂，貓咪老是尿在盆邊邊碎成一片泥巴，換了 pidan 混合砂之後整個被救贖！膨潤土剛好卡在豆腐條縫隙，結團非常完整，奶香味很自然。特別提醒新手貓奴：這款千萬不能沖馬桶！請乖乖裝垃圾袋。另外建議每 3 週整盆洗掉換新砂，衛生維持最好。',
+    ratings: { dust: 2, clump: 4, odor: 4 },
+    sponsored: false,
+    verified: true,
+    day: 30,
+    created_at: '2026-10-12',
+  },
+
+  // ================= 汪喵木薯 第二篇（Threads 神級混砂配方） =================
+  {
+    id: 'rev-dogcatstar-threads',
+    product_id: 'dogcatstar-cassava',
+    display_name: 'Threads 貓友 / 邊緣尿尿受害者',
+    cats: 2,
+    housing: 'apartment',
+    source_tag: 'Threads 貓友社群 混砂神級配方熱議',
+    pros: '木薯澱粉凝結力全台頂天、黏在盆壁垂直面也能整塊完整剝離、0 礦塵',
+    cons: '顆粒太輕太細，貓掌很容易夾砂出來沙漠化，一定要混條砂或鋪落砂墊',
+    comment: '我家貓尿尿一定要屁股翹高貼著盆壁尿，以前每次鏟死角都會把尿塊鏟碎，整個砂盆臭哄哄。換了汪喵木薯砂之後，尿塊像麻糬一樣 Q 彈有韌性，沿著邊邊撬下來完好無缺！唯一的缺點就是太會帶砂，現在我都用「1 包木薯砂 ＋ 1 包條型豆腐砂」混合使用，既有麻糬結塊力又不會滿地砂，超級推！',
+    ratings: { dust: 1, clump: 5, odor: 5 },
+    sponsored: false,
+    verified: true,
+    day: 30,
+    created_at: '2026-10-19',
+  },
 ];
 
 // ================= 社群最常問之真實 Q&A =================
